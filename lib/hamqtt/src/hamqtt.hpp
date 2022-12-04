@@ -21,7 +21,8 @@ class Hamqtt{
     static unsigned long m_datasend_normal_ltime;
     static unsigned long m_datasend_lowspeed_ltime;
     static const int MAX_REG_OBJ = 5;
-    static const int MAX_VALUE_NAME_LEN=30;      
+    static const int MAX_VALUE_NAME_LEN=30; 
+    static const char * DISCOVERY_PREFIX;    
     public:
     enum PeriodType{
         PERTYPE_NORMAL,
@@ -30,8 +31,8 @@ class Hamqtt{
     typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
 
     static void init(WiFiClient * wifiClient, IPAddress & brokerIP,char * mqttUserName,char * mqttPass,const char * clientID);
-    Hamqtt(char * const devName,char * const devIndex, char * const component, int expire_after);
-    void registerEntity(char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id=nullptr,char * value_template=nullptr,char * stateTopic=nullptr,char * cmdTopic=nullptr,char * icon=nullptr,CmdCallbackType cmdCallback=nullptr);
+    Hamqtt(char * const devName,char * const devIndex, char * const node_id, int expire_after);
+    void registerEntity(char * const component, char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id=nullptr,char * value_template=nullptr,char * icon=nullptr,CmdCallbackType cmdCallback=nullptr);
 
 
     void publisValue(char * ent_name, char * value);  
@@ -46,8 +47,7 @@ class Hamqtt{
     char * const m_devIndex;
     int m_expire_after;
     static const char * m_clientID;  
-    char * m_confTopic;
-    char * m_baseTopic;
+    char * m_node_id;
     char * m_deviceName;
     static Hamqtt * m_regObjects[MAX_REG_OBJ];
     static int m_regObjNumb;
@@ -71,13 +71,15 @@ class Hamqtt{
         char * unique_id;
         char * value_template;
         String valueName;
-        char * stateTopic;
+        String stateTopicFull;
         String cmdTopicFull;
         CmdCallbackType cmdCallback;
         char * icon;
         PeriodType    perType;
         ValueType   value;
         VType      vType;
+        char * component;
+        String object_id;
     };
     static void connect();    
     EntityConfData * m_enitiyDB[MAX_REG_ENT];

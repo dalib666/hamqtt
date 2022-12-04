@@ -24,11 +24,12 @@ MQTTClient Hamqtt::Client(512);
   Hamqtt * Hamqtt::m_regObjects[];
   unsigned long Hamqtt::m_datasend_normal_ltime=0;
   unsigned long Hamqtt::m_datasend_lowspeed_ltime=0;
+  const char *  Hamqtt::DISCOVERY_PREFIX="homeassistant";
 
 //static EntityConfData * Hamqtt::m_enitiyDB[MAX_REG_ENT];
 
-Hamqtt::Hamqtt(char * const devName,char * const devIndex, char * const confTopic, int expire_after, char * const baseTopic):\
-m_deviceName(devName),m_devIndex(devIndex),m_expire_after(expire_after),m_confTopic(confTopic),m_baseTopic(baseTopic){
+Hamqtt::Hamqtt(char * const devName,char * const devIndex, char * const node_id, int expire_after):\
+m_deviceName(devName),m_devIndex(devIndex),m_expire_after(expire_after),m_node_id(node_id){
   m_nrOFRegEnt=0;
   assert(m_regObjNumb<MAX_REG_OBJ);
   m_regObjects[m_regObjNumb]=this;
@@ -42,6 +43,7 @@ void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,char * mqttUserN
   m_mqttUserName=mqttUserName;
   m_mqttPass=mqttPass;
   m_clientID=clientID;
+  
   connect();
 }
 
@@ -57,23 +59,30 @@ void Hamqtt::connect() {
 }
 
 
-
-void Hamqtt::registerEntity(char * ent_name,Hamqtt::PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id,char * value_template,char * stateTopic,char * cmdTopic,char * icon,CmdCallbackType cmdCallback){
+void Hamqtt::registerEntity(char * const component, char * ent_name,Hamqtt::PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id,char * value_template,char * icon,CmdCallbackType cmdCallback){
   assert(m_nrOFRegEnt<MAX_REG_ENT);
  
   m_enitiyDB[m_nrOFRegEnt]=new EntityConfData[1];
+  assert(m_enitiyDB[m_nrOFRegEnt]!=nullptr);
   m_enitiyDB[m_nrOFRegEnt]->ent_name=ent_name;
   m_enitiyDB[m_nrOFRegEnt]->perType= perType;
   m_enitiyDB[m_nrOFRegEnt]->class_=class_;
   m_enitiyDB[m_nrOFRegEnt]->unit_of_measurement=unit_of_measurement;
   m_enitiyDB[m_nrOFRegEnt]->unique_id=unique_id;
   m_enitiyDB[m_nrOFRegEnt]->value_template=value_template;
-  m_enitiyDB[m_nrOFRegEnt]->stateTopic=stateTopic;
   m_enitiyDB[m_nrOFRegEnt]->cmdCallback=cmdCallback;
-  if(cmdTopic!=nullptr){
-    m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull=(String)m_baseTopic+(String)"/"+(String)cmdTopic;
+  m_enitiyDB[m_nrOFRegEnt]->component = component;
+  DEBUG_LOG0(true,"Mqtt: registerEntity step1");
+  delay(100);
+  m_enitiyDB[m_nrOFRegEnt]->stateTopicFull= (String)DISCOVERY_PREFIX+(String)"/"+ (String)m_enitiyDB[m_nrOFRegEnt]->component + (String)"/"+String(m_deviceName) +String("_") + String(m_devIndex)+ (String)"/state";
+  DEBUG_LOG0(true,"Mqtt: registerEntity step2");
+  delay(100);
+  m_enitiyDB[m_nrOFRegEnt]->object_id=String(m_deviceName) +String("-") + String(m_devIndex) + String("-") +String(ent_name);
+  if(strcmp(component,"number")==0){
+    m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull=String(DISCOVERY_PREFIX) + String("/") +  String(m_enitiyDB[m_nrOFRegEnt]->component) + String("/") +String(m_deviceName) +String("_") + String(m_devIndex)+ String("/set");
   }
- 
+  DEBUG_LOG0(true,"Mqtt: registerEntity step3");
+  delay(100);
   m_enitiyDB[m_nrOFRegEnt]->icon=icon;
   m_enitiyDB[m_nrOFRegEnt]->vType=VTYPE_UNDEF;
   m_enitiyDB[m_nrOFRegEnt]->value.s=nullptr;
@@ -101,14 +110,13 @@ void Hamqtt::publishConfOfEntity(int index_of_entity){
   json["name"]=String(m_enitiyDB[index_of_entity]->ent_name);
   if(m_enitiyDB[index_of_entity]->class_ != nullptr)
     json["device_class"]=m_enitiyDB[index_of_entity]->class_;
-  if(m_enitiyDB[index_of_entity]->stateTopic!=nullptr){
-    String stateTopic=(String)m_baseTopic + (String)"/" + (String)m_enitiyDB[index_of_entity]->stateTopic;
-    json["state_topic"]=stateTopic;
+  if(m_enitiyDB[index_of_entity]->stateTopicFull!=nullptr){
+    json["state_topic"]=m_enitiyDB[index_of_entity]->stateTopicFull;
   }
   if(m_enitiyDB[index_of_entity]->cmdTopicFull!=nullptr)
     json["command_topic"]=m_enitiyDB[index_of_entity]->cmdTopicFull; 
   
-  json["object_id"]=m_deviceName +String("-") + String(m_devIndex) + String("-") +String(m_enitiyDB[index_of_entity]->ent_name); 
+  json["object_id"]=m_enitiyDB[index_of_entity]->object_id; 
   json["unit_of_measurement"]=m_enitiyDB[index_of_entity]->unit_of_measurement;
   json["value_template"]=m_enitiyDB[index_of_entity]->value_template;
   if(m_enitiyDB[index_of_entity]->unique_id != nullptr)
@@ -124,11 +132,12 @@ void Hamqtt::publishConfOfEntity(int index_of_entity){
   if(m_enitiyDB[index_of_entity]->icon != nullptr)
     json["icon"]=m_enitiyDB[index_of_entity]->icon;
 
+  String confTopic = (String)DISCOVERY_PREFIX+(String)"/"+(String)m_enitiyDB[index_of_entity]->component+ String("/") +String(m_enitiyDB[index_of_entity]->object_id) +"/config";
   if(json.success()){
     String str_buf;
     json.prettyPrintTo(str_buf);
     DEBUG_LOG0_NOF(true,str_buf);
-    Client.publish(m_confTopic,str_buf ,true,1);
+    Client.publish(confTopic,str_buf ,true,1);
     DEBUG_LOG0(true,"MQTT:published config");
   }
 }
@@ -158,9 +167,7 @@ void Hamqtt::publishEntity(int index_of_entity){
     DEBUG_LOG0(true,"MQTT:published data");
     String str_buf;
     json.prettyPrintTo(str_buf);
-    String stateTopic=m_baseTopic + String("/") + String(m_enitiyDB[index_of_entity]->stateTopic);
-    Client.publish(stateTopic,str_buf ,true,1);
-    DEBUG_LOG0_NOF(true,stateTopic);
+    Client.publish(m_enitiyDB[index_of_entity]->stateTopicFull,str_buf ,true,1);
     DEBUG_LOG0_NOF(true,str_buf);
   }else{  
     DEBUG_LOG0(!json.success(),"MQTT:publish error");
