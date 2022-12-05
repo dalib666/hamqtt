@@ -7,7 +7,7 @@
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 #include <ESP8266HTTPClient.h>
 
-#define DEBUG_MODE
+
 
 
 void setup() {
@@ -65,6 +65,7 @@ void setup() {
 void loop() {
 static bool BuiltInLed;
 static int devider=0;
+static unsigned long lastloop=0;
   devider++;
   if(devider>1000){
     devider=0;
@@ -72,5 +73,9 @@ static int devider=0;
     digitalWrite(LED_BUILTIN, BuiltInLed);
   }
 
+  if(millis()-lastloop>5000){
+    lastloop=millis();
+    Mqtt_loop5s();
+  }
   Hamqtt::main();
 }

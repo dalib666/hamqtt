@@ -1,7 +1,7 @@
 #include <ESP8266WiFi.h>
 
 #include "hamqtt.hpp"
-#define DEBUG_MODE 
+
 #include "DebugFnc.h"  
 
 IPAddress BrokerIP(192,168,1,6);     
@@ -15,11 +15,7 @@ const char ClientID[] ="WaterHeater";
 #define EXPIRATION_TIME 60    //[sec] expire time in HA after lost data
 //topics - published
 
-//#define PUB_CONFTOPIC1 "homeassistant/sensor/boyler/config"
-//#define PUB_TOPIC1  "homeassistant/sensor/boyler/wTemp"         //actual water temperature
-//#define PUB_CONFTOPIC2 "homeassistant/number/boyler/config"
-#define SUB_TOPIC2 "homeassistant/number/boyler/reqPower/set"       //request power
-#define PUB_TOPIC2 "homeassistant/number/boyler/reqPower/state"       //request power
+
 
 // Initialize the client library
 WiFiClient Wclient;
@@ -43,5 +39,12 @@ void Mqtt_init(){
     DEBUG_LOG0(true,"publisValue");
 }
 
+void Mqtt_loop5s(){
+    static float testVal = 0.0f;
+    testVal+=1.1;
+    if (testVal > 100.0f) testVal = 0.0f;
 
+    DevObj.publisValue("Water_Temp", testVal); //test value
+    DevObj.publisValue("Req_Power", testVal+1); //test value
+}
  //publishConfig(DEVICE_INDEX_NAME,"Req Power",nullptr,PUB_CONFTOPIC2,"W",nullptr,"{{value_json.reqPower}}",PUB_TOPIC2, SUB_TOPIC2);

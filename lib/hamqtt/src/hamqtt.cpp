@@ -9,7 +9,6 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#define DEBUG_MODE 
 #include "hamqtt.hpp"
 #include "DebugFnc.h"
 
@@ -56,6 +55,10 @@ void Hamqtt::connect() {
   else{
     DEBUG_LOG0(true,"\n not connected!");
   }
+}
+
+void Hamqtt::registerSensorEntity(char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * value_template=nullptr,char * icon=nullptr,char * const entity_category=nullptr){
+TODO
 }
 
 
@@ -106,7 +109,7 @@ void Hamqtt::publishConfOfEntity(int index_of_entity){
   StaticJsonBuffer<1500> jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();  
 
-  //json["name"]=DEVICE_NAME + String("-") +String(ent_name);
+
   json["name"]=String(m_enitiyDB[index_of_entity]->ent_name);
   if(m_enitiyDB[index_of_entity]->class_ != nullptr)
     json["device_class"]=m_enitiyDB[index_of_entity]->class_;
@@ -123,11 +126,11 @@ void Hamqtt::publishConfOfEntity(int index_of_entity){
     json["unique_id"]= m_enitiyDB[index_of_entity]->unique_id; 
   else  
     json["unique_id"]= json["object_id"]; 
-  
-  /*JsonObject& device=json.createNestedObject("device"); //po vložení této sekce HA zařízení nevidí
-  device["name"]=m_enitiyDB[index_of_entity]->ent_name;
-  device["sw_version"]=m_sw_version;; 
-*/
+  /*
+  JsonObject& device=json.createNestedObject("device"); //po vložení této sekce HA zařízení nevidí
+  device["name"]=m_deviceName;
+  device["sw_version"]="V1.1";
+  */
   json["expire_after"]=m_expire_after;
   if(m_enitiyDB[index_of_entity]->icon != nullptr)
     json["icon"]=m_enitiyDB[index_of_entity]->icon;

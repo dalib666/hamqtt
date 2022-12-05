@@ -33,7 +33,7 @@ class Hamqtt{
     static void init(WiFiClient * wifiClient, IPAddress & brokerIP,char * mqttUserName,char * mqttPass,const char * clientID);
     Hamqtt(char * const devName,char * const devIndex, char * const node_id, int expire_after);
     void registerEntity(char * const component, char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id=nullptr,char * value_template=nullptr,char * icon=nullptr,CmdCallbackType cmdCallback=nullptr);
-
+    void registerSensorEntity(char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * value_template=nullptr,char * icon=nullptr,char * const entity_category=nullptr);
 
     void publisValue(char * ent_name, char * value);  
     void publisValue(char * ent_name, float value);    
