@@ -31,7 +31,8 @@ void entCallBack(int indOfEnt, String &payload){
 void Mqtt_init(){
     Hamqtt::init(&Wclient, BrokerIP,MqttUserName,MqttPass,ClientID);
     DEBUG_LOG0(true,"Mqtt init");
-    DevObj.registerEntity("sensor","Water_Temp",Hamqtt::PERTYPE_NORMAL,"temperature","°C",nullptr,"{{value_json.wTemp}}","mdi:thermometer");
+    //DevObj.registerEntity("sensor","Water_Temp",Hamqtt::PERTYPE_NORMAL,"temperature","°C",nullptr,"{{value_json.wTemp}}","mdi:thermometer");
+    DevObj.registerSensorEntity("Water_Temp",Hamqtt::PERTYPE_NORMAL,"temperature","°C","{{value_json.wTemp}}","mdi:thermometer","diagnostic");
     DevObj.registerEntity("number","Req_Power",Hamqtt::PERTYPE_NORMAL,nullptr,"W",nullptr,"{{value_json.actPower}}","material-symbols:mode-heat-outline",entCallBack);
     DEBUG_LOG0(true,"registerEntity");
     DevObj.publisValue("Water_Temp", 21.9f); //test value

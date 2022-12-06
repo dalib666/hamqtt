@@ -57,12 +57,12 @@ void Hamqtt::connect() {
   }
 }
 
-void Hamqtt::registerSensorEntity(char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * value_template=nullptr,char * icon=nullptr,char * const entity_category=nullptr){
-TODO
+void Hamqtt::registerSensorEntity(char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * value_template,char * icon,char * const entity_category){
+  registerEntity("sensor",ent_name,perType,class_,unit_of_measurement,nullptr,value_template,icon,nullptr,entity_category);
 }
 
 
-void Hamqtt::registerEntity(char * const component, char * ent_name,Hamqtt::PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id,char * value_template,char * icon,CmdCallbackType cmdCallback){
+void Hamqtt::registerEntity(char * const component, char * ent_name,Hamqtt::PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id,char * value_template,char * icon,CmdCallbackType cmdCallback,char * const entity_category){
   assert(m_nrOFRegEnt<MAX_REG_ENT);
  
   m_enitiyDB[m_nrOFRegEnt]=new EntityConfData[1];
@@ -75,6 +75,7 @@ void Hamqtt::registerEntity(char * const component, char * ent_name,Hamqtt::Peri
   m_enitiyDB[m_nrOFRegEnt]->value_template=value_template;
   m_enitiyDB[m_nrOFRegEnt]->cmdCallback=cmdCallback;
   m_enitiyDB[m_nrOFRegEnt]->component = component;
+  m_enitiyDB[m_nrOFRegEnt]->entity_category=entity_category;
   DEBUG_LOG0(true,"Mqtt: registerEntity step1");
   delay(100);
   m_enitiyDB[m_nrOFRegEnt]->stateTopicFull= (String)DISCOVERY_PREFIX+(String)"/"+ (String)m_enitiyDB[m_nrOFRegEnt]->component + (String)"/"+String(m_deviceName) +String("_") + String(m_devIndex)+ (String)"/state";
@@ -126,15 +127,19 @@ void Hamqtt::publishConfOfEntity(int index_of_entity){
     json["unique_id"]= m_enitiyDB[index_of_entity]->unique_id; 
   else  
     json["unique_id"]= json["object_id"]; 
-  /*
-  JsonObject& device=json.createNestedObject("device"); //po vložení této sekce HA zařízení nevidí
+  
+  /*JsonObject& device=json.createNestedObject("device"); //po vložení této sekce HA zařízení nevidí
+  device["identifiers"]="[\"T_Heater1\"]"; //test
   device["name"]=m_deviceName;
   device["sw_version"]="V1.1";
-  */
+  device["model"]="modelXXX";
+  device["manufacturer"]="Kuchta Company";*/
+
   json["expire_after"]=m_expire_after;
   if(m_enitiyDB[index_of_entity]->icon != nullptr)
     json["icon"]=m_enitiyDB[index_of_entity]->icon;
-
+  if(m_enitiyDB[index_of_entity]->entity_category != nullptr)
+    json["entity_category"]=m_enitiyDB[index_of_entity]->entity_category;
   String confTopic = (String)DISCOVERY_PREFIX+(String)"/"+(String)m_enitiyDB[index_of_entity]->component+ String("/") +String(m_enitiyDB[index_of_entity]->object_id) +"/config";
   if(json.success()){
     String str_buf;
