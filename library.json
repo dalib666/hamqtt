@@ -1,0 +1,30 @@
+{
+    "name": "hamqtt",
+    "version": "0.2.0",
+    "description": "Simplifies implementing of MQTT communication into Home Assistatnt. Supports also discovery functionality.",
+    "keywords": "Home Assistant, MQTT, discovery",
+    "repository":
+    {
+      "type": "git",
+      "url": "https://github.com/dalib666/hamqtt"
+    },
+    "authors":
+    [
+      {
+        "name": "Dalibor Kuchta",
+        "email": "daliborkuchta@gmail.com"
+      },
+      {
+        "name": "Dalibor Kuchta",
+        "email": "daliborkuchta@gmail.com",
+        "maintainer": true
+      }
+    ],
+    "license": "MIT",
+    "dependencies": {
+      "bblanchon/ArduinoJson":  "~5.3.15",
+      "MQTT": "~2.5.0"
+    },
+    "frameworks": "arduino",
+    "platforms": "espressif8266"
+  }

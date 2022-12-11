@@ -14,23 +14,28 @@
 #include <MQTTClient.h>
 
 class Hamqtt{
+    //default setting of params
+    static const unsigned long DATASEND_NORMAL_PER=1000ul;      
+    static const unsigned long DATASEND_LOWSPEED_PER=30000ul;
+    static const unsigned long DATASEND_HIGHSPEED_PER=200ul;
+    //constant parameters
     static const int MAX_REG_ENT=20;
     static const int CONFIG_PER=60;
-    static const unsigned long DATASEND_NORMAL_PER=1000ul;
-    static const unsigned long DATASEND_LOWSPEED_PER=30000ul;
     static unsigned long m_datasend_normal_ltime;
     static unsigned long m_datasend_lowspeed_ltime;
+    static unsigned long m_datasend_highspeed_ltime;
     static const int MAX_REG_OBJ = 5;
     static const int MAX_VALUE_NAME_LEN=30; 
     static const char * DISCOVERY_PREFIX;    
     public:
     enum PeriodType{
         PERTYPE_NORMAL,
-        PERTYPE_LOWSPEED
+        PERTYPE_LOWSPEED,
+        PERTYPE_HIGHSPEED,
     }; 
     typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
 
-    static void init(WiFiClient * wifiClient, IPAddress & brokerIP,char * mqttUserName,char * mqttPass,const char * clientID);
+    static void init(WiFiClient * wifiClient, IPAddress & brokerIP,char * mqttUserName,char * mqttPass,const char * clientID,unsigned int normalPer=0,unsigned int lowPer=0,unsigned int highPer=0);
     Hamqtt(char * const devName,char * const devIndex, char * const node_id, int expire_after);
     void registerEntity(char * const component, char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id=nullptr,char * value_template=nullptr,char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,char * const entity_category=nullptr);
     void registerSensorEntity(char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * value_template=nullptr,char * icon=nullptr,char * const entity_category=nullptr);
@@ -40,7 +45,9 @@ class Hamqtt{
     static void main();
     
     private:
-    
+    static unsigned long m_DatasendNormalPer;
+    static unsigned long m_DatasendLowPer;
+    static unsigned long m_DatasendHighPer;
     static char * m_mqttUserName;
     static char * m_mqttPass;
     int m_nrOFRegEnt;

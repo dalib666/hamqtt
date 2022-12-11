@@ -12,9 +12,10 @@
 #include "hamqtt.hpp"
 #include "DebugFnc.h"
 
-
 MQTTClient Hamqtt::Client(512);
-
+  unsigned long Hamqtt::m_DatasendNormalPer=Hamqtt::DATASEND_NORMAL_PER;
+  unsigned long Hamqtt::m_DatasendLowPer=Hamqtt::DATASEND_LOWSPEED_PER;
+  unsigned long Hamqtt::m_DatasendHighPer=Hamqtt::DATASEND_HIGHSPEED_PER;
   char * Hamqtt::m_mqttUserName;
   char * Hamqtt::m_mqttPass;
   const char * Hamqtt::m_clientID; 
@@ -23,6 +24,7 @@ MQTTClient Hamqtt::Client(512);
   Hamqtt * Hamqtt::m_regObjects[];
   unsigned long Hamqtt::m_datasend_normal_ltime=0;
   unsigned long Hamqtt::m_datasend_lowspeed_ltime=0;
+  unsigned long Hamqtt::m_datasend_highspeed_ltime=0;
   const char *  Hamqtt::DISCOVERY_PREFIX="homeassistant";
 
 //static EntityConfData * Hamqtt::m_enitiyDB[MAX_REG_ENT];
@@ -35,13 +37,16 @@ m_deviceName(devName),m_devIndex(devIndex),m_expire_after(expire_after),m_node_i
   m_regObjNumb++;
 }
 
-void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,char * mqttUserName,char * mqttPass,const char * clientID){
+void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,char * mqttUserName,char * mqttPass,const char * clientID,unsigned int normalPer,unsigned int lowPer,unsigned int highPer){
   Client.begin(brokerIP, *wifiClient);
   Client.onMessage(messageReceived);
   m_wifiClientPtr=wifiClient;
   m_mqttUserName=mqttUserName;
   m_mqttPass=mqttPass;
   m_clientID=clientID;
+  if(normalPer!=0)m_DatasendNormalPer=normalPer;
+  if(lowPer!=0)m_DatasendLowPer=lowPer;
+  if(highPer!=0)m_DatasendHighPer=highPer;
   
   connect();
 }
@@ -126,10 +131,12 @@ void Hamqtt::publishConfOfEntity(int index_of_entity){
   if(m_enitiyDB[index_of_entity]->unique_id != nullptr)
     json["unique_id"]= m_enitiyDB[index_of_entity]->unique_id; 
   else  
-    json["unique_id"]= json["object_id"]; 
+    json["unique_id"]= m_enitiyDB[index_of_entity]->object_id; 
   
   /*JsonObject& device=json.createNestedObject("device"); //po vložení této sekce HA zařízení nevidí
-  device["identifiers"]="[\"T_Heater1\"]"; //test
+ 
+  JsonArray& ident_list= device.createNestedArray("identifiers");
+  ident_list.add(String(m_deviceName) +String("-") + String(m_devIndex));
   device["name"]=m_deviceName;
   device["sw_version"]="V1.1";
   device["model"]="modelXXX";
@@ -220,7 +227,7 @@ void Hamqtt::main(){
   unsigned long delTime=0;
   delTime = millis() - m_datasend_normal_ltime;  
   Client.loop();
-  if(delTime >= DATASEND_NORMAL_PER){
+  if(delTime >= m_DatasendNormalPer){
     m_datasend_normal_ltime = millis();
     for(int objInd=0;objInd<m_regObjNumb;objInd++){
       Hamqtt * objPtr=m_regObjects[objInd];
@@ -232,7 +239,7 @@ void Hamqtt::main(){
   }
 
   delTime = millis() - m_datasend_lowspeed_ltime;
-  if(delTime >= DATASEND_LOWSPEED_PER){
+  if(delTime >= m_DatasendLowPer){
     m_datasend_lowspeed_ltime = millis();
     for(int objInd=0;objInd<m_regObjNumb;objInd++){
       Hamqtt * objPtr=m_regObjects[objInd];   
@@ -243,6 +250,17 @@ void Hamqtt::main(){
     }  
   }
 
+  delTime = millis() - m_datasend_highspeed_ltime;
+  if(delTime >= m_DatasendHighPer){
+    m_datasend_highspeed_ltime = millis();
+    for(int objInd=0;objInd<m_regObjNumb;objInd++){
+      Hamqtt * objPtr=m_regObjects[objInd];   
+      if(WiFi.status() == WL_CONNECTED){
+        if (!Client.connected())connect();
+        objPtr->publisValuesPer(PERTYPE_HIGHSPEED);
+      }
+    }  
+  }
 } 
 
 
