@@ -35,33 +35,41 @@ class Hamqtt{
     }; 
     typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
 
-    static void init(WiFiClient * wifiClient, IPAddress & brokerIP,char * mqttUserName,char * mqttPass,const char * clientID,unsigned int normalPer=0,unsigned int lowPer=0,unsigned int highPer=0);
-    Hamqtt(char * const devName,char * const devIndex, char * const node_id, int expire_after);
-    void registerEntity(char * const component, char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id=nullptr,char * value_template=nullptr,char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,char * const entity_category=nullptr);
-    void registerSensorEntity(char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * value_template=nullptr,char * icon=nullptr,char * const entity_category=nullptr);
-
-    void publisValue(char * ent_name, char * value);  
-    void publisValue(char * ent_name, float value);    
+    static void init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer=0,unsigned int lowPer=0,unsigned int highPer=0);
+    Hamqtt(const char * devName,const char *  devIndex, const char * model, const char * manufacturer, const char * swVersion, const char * identifiers, const char * configuration_url, const char * hw_version, const char * via_device, int expire_after);
+    void registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id=nullptr,const char * value_template=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr);
+    void registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * value_template=nullptr,const char * icon=nullptr);
+    void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * value_template=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr);
+    void publisValue(const char * ent_name, const char * value);  
+    void publisValue(const char * ent_name, float value);    
     static void main();
     
     private:
     static unsigned long m_DatasendNormalPer;
     static unsigned long m_DatasendLowPer;
     static unsigned long m_DatasendHighPer;
-    static char * m_mqttUserName;
-    static char * m_mqttPass;
+    static const char * m_mqttUserName;
+    static const char * m_mqttPass;
     int m_nrOFRegEnt;
-    char * const m_devIndex;
+    const char * m_devIndex;
     int m_expire_after;
     static const char * m_clientID;  
-    char * m_node_id;
-    char * m_deviceName;
+    const char * m_deviceName;
+    const char * m_model;
+    const char * m_manufacturer;
+    const char * m_swVersion;
+    const char * m_identifiers;
+    const char * m_configuration_url; 
+    const char * m_hw_version;
+    const char * m_via_device;
+
+
     static Hamqtt * m_regObjects[MAX_REG_OBJ];
     static int m_regObjNumb;
     union ValueType{
       int i;
       float f;
-      char * s;
+      const char * s;
     };
    
     enum VType{
@@ -72,22 +80,22 @@ class Hamqtt{
     };
     
     struct EntityConfData{
-        char * ent_name;
-        char * class_;
-        char * unit_of_measurement;
-        char * unique_id;
-        char * value_template;
+        const char * ent_name;
+        const char * class_;
+        const char * unit_of_measurement;
+        const char * unique_id;
+        const char * value_template;
         String valueName;
         String stateTopicFull;
         String cmdTopicFull;
         CmdCallbackType cmdCallback;
-        char * icon;
+        const char * icon;
         PeriodType    perType;
         ValueType   value;
         VType      vType;
-        char * component;
+        const char * component;
         String object_id;
-        char * entity_category;
+        const char * entity_category;
     };
     static void connect();    
     EntityConfData * m_enitiyDB[MAX_REG_ENT];

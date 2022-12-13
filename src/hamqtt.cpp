@@ -12,12 +12,12 @@
 #include "hamqtt.hpp"
 #include "DebugFnc.h"
 
-MQTTClient Hamqtt::Client(512);
+MQTTClient Hamqtt::Client(768);
   unsigned long Hamqtt::m_DatasendNormalPer=Hamqtt::DATASEND_NORMAL_PER;
   unsigned long Hamqtt::m_DatasendLowPer=Hamqtt::DATASEND_LOWSPEED_PER;
   unsigned long Hamqtt::m_DatasendHighPer=Hamqtt::DATASEND_HIGHSPEED_PER;
-  char * Hamqtt::m_mqttUserName;
-  char * Hamqtt::m_mqttPass;
+  const char * Hamqtt::m_mqttUserName;
+  const char * Hamqtt::m_mqttPass;
   const char * Hamqtt::m_clientID; 
   WiFiClient * Hamqtt::m_wifiClientPtr;
   int Hamqtt::m_regObjNumb;
@@ -26,18 +26,17 @@ MQTTClient Hamqtt::Client(512);
   unsigned long Hamqtt::m_datasend_lowspeed_ltime=0;
   unsigned long Hamqtt::m_datasend_highspeed_ltime=0;
   const char *  Hamqtt::DISCOVERY_PREFIX="homeassistant";
-
+ 
 //static EntityConfData * Hamqtt::m_enitiyDB[MAX_REG_ENT];
-
-Hamqtt::Hamqtt(char * const devName,char * const devIndex, char * const node_id, int expire_after):\
-m_deviceName(devName),m_devIndex(devIndex),m_expire_after(expire_after),m_node_id(node_id){
+Hamqtt::Hamqtt(const char * devName,const char *  devIndex, const char * model, const char * manufacturer, const char * swVersion, const char * identifiers, const char * configuration_url, const char * hw_version, const char * via_device, int expire_after):\
+m_devIndex(devIndex),m_expire_after(expire_after),m_deviceName(devName),m_model(model),m_manufacturer(manufacturer),m_swVersion(swVersion),m_identifiers(identifiers),m_configuration_url(configuration_url),m_hw_version(hw_version),m_via_device(via_device){
   m_nrOFRegEnt=0;
   assert(m_regObjNumb<MAX_REG_OBJ);
   m_regObjects[m_regObjNumb]=this;
   m_regObjNumb++;
 }
 
-void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,char * mqttUserName,char * mqttPass,const char * clientID,unsigned int normalPer,unsigned int lowPer,unsigned int highPer){
+void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer,unsigned int lowPer,unsigned int highPer){
   Client.begin(brokerIP, *wifiClient);
   Client.onMessage(messageReceived);
   m_wifiClientPtr=wifiClient;
@@ -62,12 +61,15 @@ void Hamqtt::connect() {
   }
 }
 
-void Hamqtt::registerSensorEntity(char * ent_name,PeriodType perType, char * class_,char * unit_of_measurement,char * value_template,char * icon,char * const entity_category){
-  registerEntity("sensor",ent_name,perType,class_,unit_of_measurement,nullptr,value_template,icon,nullptr,entity_category);
+void Hamqtt::registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * value_template,const char * icon){
+  registerEntity("sensor",ent_name,perType,class_,unit_of_measurement,nullptr,value_template,icon,nullptr,"diagnostic");
+}
+void Hamqtt::registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * value_template,const char * icon,CmdCallbackType cmdCallback){
+  registerEntity("number",ent_name,perType,class_,unit_of_measurement,nullptr,value_template,icon,cmdCallback,"config");
 }
 
 
-void Hamqtt::registerEntity(char * const component, char * ent_name,Hamqtt::PeriodType perType, char * class_,char * unit_of_measurement,char * unique_id,char * value_template,char * icon,CmdCallbackType cmdCallback,char * const entity_category){
+void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt::PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id,const char * value_template,const char * icon,CmdCallbackType cmdCallback,const char * entity_category){
   assert(m_nrOFRegEnt<MAX_REG_ENT);
  
   m_enitiyDB[m_nrOFRegEnt]=new EntityConfData[1];
@@ -122,6 +124,17 @@ void Hamqtt::publishConfOfEntity(int index_of_entity){
   if(m_enitiyDB[index_of_entity]->stateTopicFull!=nullptr){
     json["state_topic"]=m_enitiyDB[index_of_entity]->stateTopicFull;
   }
+
+  JsonObject& device=json.createNestedObject("device"); //po vložení této sekce HA zařízení nevidí
+ 
+  //JsonArray& ident_list= device.createNestedArray("identifiers");
+  //ident_list.add(String(m_deviceName) +String("-") + String(m_devIndex));
+  device["model"]="modelXXX";
+  device["identifiers"]=String(m_deviceName) +String("-") + String(m_devIndex);
+  device["name"]=m_deviceName;
+  device["sw_version"]="V1.1";
+  device["manufacturer"]="DK";
+
   if(m_enitiyDB[index_of_entity]->cmdTopicFull!=nullptr)
     json["command_topic"]=m_enitiyDB[index_of_entity]->cmdTopicFull; 
   
@@ -133,15 +146,7 @@ void Hamqtt::publishConfOfEntity(int index_of_entity){
   else  
     json["unique_id"]= m_enitiyDB[index_of_entity]->object_id; 
   
-  /*JsonObject& device=json.createNestedObject("device"); //po vložení této sekce HA zařízení nevidí
- 
-  JsonArray& ident_list= device.createNestedArray("identifiers");
-  ident_list.add(String(m_deviceName) +String("-") + String(m_devIndex));
-  device["name"]=m_deviceName;
-  device["sw_version"]="V1.1";
-  device["model"]="modelXXX";
-  device["manufacturer"]="Kuchta Company";*/
-
+  
   json["expire_after"]=m_expire_after;
   if(m_enitiyDB[index_of_entity]->icon != nullptr)
     json["icon"]=m_enitiyDB[index_of_entity]->icon;
@@ -152,8 +157,9 @@ void Hamqtt::publishConfOfEntity(int index_of_entity){
     String str_buf;
     json.prettyPrintTo(str_buf);
     DEBUG_LOG0_NOF(true,str_buf);
-    Client.publish(confTopic,str_buf ,true,1);
-    DEBUG_LOG0(true,"MQTT:published config");
+    bool pubStatus = Client.publish(confTopic,str_buf ,true,1);
+    DEBUG_LOG0(pubStatus,"MQTT:published config");
+    DEBUG_LOG(!pubStatus,"MQTT:not published config !!! error=",Client.lastError()); 
   }
 }
 
@@ -190,7 +196,7 @@ void Hamqtt::publishEntity(int index_of_entity){
 }
 
 
-void Hamqtt::publisValue(char * ent_name, char * value){
+void Hamqtt::publisValue(const char  * ent_name, const char * value){
   for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
       m_enitiyDB[i]->value.s=value;
@@ -202,7 +208,7 @@ void Hamqtt::publisValue(char * ent_name, char * value){
   DEBUG_LOG0(true,"MQTT:publisValue:entity not found");
 }
 
-void Hamqtt::publisValue(char * ent_name, float value){
+void Hamqtt::publisValue(const char  * ent_name, float value){
   for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
       m_enitiyDB[i]->value.f=value;
