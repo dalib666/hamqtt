@@ -36,12 +36,12 @@ class Hamqtt{
     typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
 
     static void init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer=0,unsigned int lowPer=0,unsigned int highPer=0);
-    Hamqtt(const char * devName,const char *  devIndex, const char * model, const char * manufacturer, const char * swVersion, const char * identifiers, const char * configuration_url, const char * hw_version, const char * via_device, int expire_after);
-    void registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id=nullptr,const char * value_template=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr);
-    void registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * value_template=nullptr,const char * icon=nullptr);
-    void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * value_template=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr);
-    void publisValue(const char * ent_name, const char * value);  
-    void publisValue(const char * ent_name, float value);    
+    Hamqtt(const char * devName,const char *  devIndex=nullptr, const char * model=nullptr, const char * manufacturer=nullptr, const char * swVersion=nullptr, const char * identifiers=nullptr, const char * configuration_url=nullptr, const char * hw_version=nullptr, const char * via_device=nullptr, int expire_after=60);
+    void registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr, int entNumber=1);
+    void registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon=nullptr, int entNumber=1);	
+    void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr);
+    void publishValue(const char * ent_name, const char * value,int item=-1);  
+    void publishValue(const char * ent_name, float value,int item=-1);
     static void main();
     
     private:
@@ -84,7 +84,6 @@ class Hamqtt{
         const char * class_;
         const char * unit_of_measurement;
         const char * unique_id;
-        const char * value_template;
         String valueName;
         String stateTopicFull;
         String cmdTopicFull;
@@ -96,12 +95,13 @@ class Hamqtt{
         const char * component;
         String object_id;
         const char * entity_category;
+        int entNumber;
     };
     static void connect();    
     EntityConfData * m_enitiyDB[MAX_REG_ENT];
     void publisValuesPer(PeriodType period);  
-    void publishEntity(int index_of_entity);    
-    void publishConfOfEntity(int index_of_entity);
+    void publishEntity(int index_of_entity, int index_of_item);  
+    void publishConfOfEntity(int index_of_entity, int index_of_item);
     static void messageReceived(String &topic, String &payload);
 
     
