@@ -1,0 +1,436 @@
+ *  Provádění úkolu ve složce HAMQTT: C:\Users\Dalibor\.platformio\penv\Scripts\platformio.exe device monitor --environment BMS 
+
+--- Terminal on COM9 | 115200 8-N-1
+--- Available filters and text transformations: colorize, debug, default, direct, esp8266_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time
+--- More details at https://bit.ly/pio-monitor-filters
+--- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+22:43:47.460 > rl␀l��|␀�l�|␂␌␌␌�␌l�␌b|��␂�␒�r�b�␌b��nn�lnn���␌b␜p��lrlrlp�n�␐␂␌␌�␌l␌��␌␌␌b␌n�|␂�␌��␌b��nn�␀l��l`␂�␒␒nn␌�␎l␎␂nr���n␌␌rr�`␂p�n�␐␂␌␌r����␜��␂␌b␌n�|␂␌�␌b��nn�␀␌�l`␂�␒␒nn␌�␎l␎␂nr���n␌␌r␒l`␂␎r��n␌␌r␒l`␂�␂␌␌l�␜␂r␂l`␂��n�␎lStarting...
+22:43:47.585 > *WM:
+22:43:47.585 > *WM: AutoConnect
+22:43:47.585 > *WM: Connecting as wifi client...
+22:43:47.585 > *WM: Status:
+22:43:47.585 > *WM: 0
+22:43:47.585 > *WM: Using last saved values, should be faster
+22:43:47.585 > *WM: Waiting for connection result with time out
+22:43:51.188 > *WM: Connection result: 
+22:43:51.188 > *WM: 3
+22:43:51.188 > *WM: IP Address:        
+22:43:51.188 > *WM: 192.168.1.16       
+22:43:51.188 >
+22:43:51.188 > Connected...IP address: 192.168.1.16
+22:43:51.188 > Mqtt: nconnecting to broker...
+22:43:51.675 > 
+22:43:51.676 >  connected!
+22:43:51.676 > Mqtt init
+22:43:51.676 > soc
+22:43:51.817 > publishConfOfEntity: index_of_item=0
+22:43:51.818 > {
+22:43:51.818 >   "name": "soc",
+22:43:51.818 >   "device_class": "battery",
+22:43:51.818 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:51.818 >   "device": {
+22:43:51.818 >     "model": "BatCC01",
+22:43:51.818 >     "identifiers": "001",
+22:43:51.818 >     "name": "BMS",
+22:43:51.818 >     "sw_version": "1.0.1",
+22:43:51.818 >     "manufacturer": "DK",
+22:43:51.818 >     "hw_version": "1.0"
+22:43:51.818 >   },
+22:43:51.818 >   "object_id": "BMS-0-soc",
+22:43:51.818 >   "unit_of_measurement": "%",
+22:43:51.818 >   "value_template": "{{value_json.soc}}",
+22:43:51.818 >   "unique_id": "BMS-0-soc",
+22:43:51.818 >   "expire_after": 60,
+22:43:51.818 >   "entity_category": "diagnostic"
+22:43:51.818 > }
+22:43:51.818 > MQTT:published config
+22:43:51.820 > alert
+22:43:51.961 > publishConfOfEntity: index_of_item=0
+22:43:51.962 > {
+22:43:51.962 >   "name": "alert",
+22:43:51.962 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:51.962 >   "device": {
+22:43:51.962 >     "model": "BatCC01",
+22:43:51.962 >     "identifiers": "001",
+22:43:51.962 >     "name": "BMS",
+22:43:51.962 >     "sw_version": "1.0.1",
+22:43:51.962 >     "manufacturer": "DK",
+22:43:51.962 >     "hw_version": "1.0"
+22:43:51.962 >   },
+22:43:51.962 >   "object_id": "BMS-0-alert",
+22:43:51.962 >   "unit_of_measurement": "",
+22:43:51.962 >   "value_template": "{{value_json.alert}}",
+22:43:51.962 >   "unique_id": "BMS-0-alert",
+22:43:51.962 >   "expire_after": 60,
+22:43:51.962 >   "entity_category": "diagnostic"
+22:43:51.962 > }
+22:43:51.962 > MQTT:published config
+22:43:51.962 > warning
+22:43:52.099 > publishConfOfEntity: index_of_item=0
+22:43:52.099 > {
+22:43:52.099 >   "name": "warning",
+22:43:52.099 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:52.099 >   "device": {
+22:43:52.099 >     "model": "BatCC01",
+22:43:52.099 >     "identifiers": "001",
+22:43:52.099 >     "name": "BMS",
+22:43:52.099 >     "sw_version": "1.0.1",
+22:43:52.099 >     "manufacturer": "DK",
+22:43:52.099 >     "hw_version": "1.0"
+22:43:52.099 >   },
+22:43:52.099 >   "object_id": "BMS-0-warning",
+22:43:52.099 >   "unit_of_measurement": "",
+22:43:52.099 >   "value_template": "{{value_json.warning}}",
+22:43:52.099 >   "unique_id": "BMS-0-warning",
+22:43:52.099 >   "expire_after": 60,
+22:43:52.099 >   "entity_category": "diagnostic"
+22:43:52.099 > }
+22:43:52.102 > MQTT:published config
+22:43:52.102 > ubat
+22:43:52.245 > publishConfOfEntity: index_of_item=0
+22:43:52.250 > {
+22:43:52.250 >   "name": "ubat",
+22:43:52.250 >   "device_class": "voltage",
+22:43:52.250 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:52.250 >   "device": {
+22:43:52.250 >     "model": "BatCC01",
+22:43:52.250 >     "identifiers": "001",
+22:43:52.250 >     "name": "BMS",
+22:43:52.250 >     "sw_version": "1.0.1",
+22:43:52.250 >     "manufacturer": "DK",
+22:43:52.250 >     "hw_version": "1.0"
+22:43:52.250 >   },
+22:43:52.250 >   "object_id": "BMS-0-ubat",
+22:43:52.250 >   "unit_of_measurement": "V",
+22:43:52.250 >   "value_template": "{{value_json.ubat}}",
+22:43:52.250 >   "unique_id": "BMS-0-ubat",
+22:43:52.250 >   "expire_after": 60,
+22:43:52.250 >   "entity_category": "diagnostic"
+22:43:52.250 > }
+22:43:52.250 > MQTT:published config
+22:43:52.250 > ibat
+22:43:52.387 > publishConfOfEntity: index_of_item=0
+22:43:52.388 > {
+22:43:52.388 >   "name": "ibat",
+22:43:52.388 >   "device_class": "current",
+22:43:52.388 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:52.388 >   "device": {
+22:43:52.388 >     "model": "BatCC01",
+22:43:52.388 >     "identifiers": "001",
+22:43:52.388 >     "name": "BMS",
+22:43:52.388 >     "sw_version": "1.0.1",
+22:43:52.388 >     "manufacturer": "DK",
+22:43:52.388 >     "hw_version": "1.0"
+22:43:52.388 >   },
+22:43:52.388 >   "object_id": "BMS-0-ibat",
+22:43:52.388 >   "unit_of_measurement": "A",
+22:43:52.388 >   "value_template": "{{value_json.ibat}}",
+22:43:52.388 >   "unique_id": "BMS-0-ibat",
+22:43:52.388 >   "expire_after": 60,
+22:43:52.388 >   "entity_category": "diagnostic"
+22:43:52.388 > }
+22:43:52.390 > MQTT:published config
+22:43:52.390 > tbat
+22:43:52.529 > publishConfOfEntity: index_of_item=0
+22:43:52.529 > {
+22:43:52.529 >   "name": "tbat",
+22:43:52.529 >   "device_class": "temperature",
+22:43:52.529 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:52.529 >   "device": {
+22:43:52.529 >     "model": "BatCC01",
+22:43:52.529 >     "identifiers": "001",
+22:43:52.529 >     "name": "BMS",
+22:43:52.529 >     "sw_version": "1.0.1",
+22:43:52.529 >     "manufacturer": "DK",
+22:43:52.529 >     "hw_version": "1.0"
+22:43:52.529 >   },
+22:43:52.529 >   "object_id": "BMS-0-tbat",
+22:43:52.529 >   "unit_of_measurement": "°C",
+22:43:52.529 >   "value_template": "{{value_json.tbat}}",
+22:43:52.529 >   "unique_id": "BMS-0-tbat",
+22:43:52.529 >   "expire_after": 60,
+22:43:52.529 >   "entity_category": "diagnostic"
+22:43:52.574 > }
+22:43:52.574 > MQTT:published config
+22:43:52.574 > publishConfOfEntity: index_of_item=1
+22:43:52.574 > {
+22:43:52.574 >   "name": "tbat",
+22:43:52.574 >   "device_class": "temperature",
+22:43:52.574 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:52.574 >   "device": {
+22:43:52.574 >     "model": "BatCC01",
+22:43:52.574 >     "identifiers": "001",
+22:43:52.574 >     "name": "BMS",
+22:43:52.574 >     "sw_version": "1.0.1",
+22:43:52.574 >     "manufacturer": "DK",
+22:43:52.574 >     "hw_version": "1.0"
+22:43:52.574 >   },
+22:43:52.574 >   "object_id": "BMS-0-tbat",
+22:43:52.574 >   "unit_of_measurement": "°C",
+22:43:52.574 >   "value_template": "{{value_json.tbat}}",
+22:43:52.574 >   "unique_id": "BMS-0-tbat",
+22:43:52.574 >   "expire_after": 60,
+22:43:52.574 >   "entity_category": "diagnostic"
+22:43:52.618 > }
+22:43:52.618 > MQTT:published config
+22:43:52.618 > publishConfOfEntity: index_of_item=2
+22:43:52.618 > {
+22:43:52.618 >   "name": "tbat",
+22:43:52.618 >   "device_class": "temperature",
+22:43:52.618 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:52.618 >   "device": {
+22:43:52.618 >     "model": "BatCC01",
+22:43:52.618 >     "identifiers": "001",
+22:43:52.618 >     "name": "BMS",
+22:43:52.618 >     "sw_version": "1.0.1",
+22:43:52.618 >     "manufacturer": "DK",
+22:43:52.618 >     "hw_version": "1.0"
+22:43:52.618 >   },
+22:43:52.618 >   "object_id": "BMS-0-tbat",
+22:43:52.618 >   "unit_of_measurement": "°C",
+22:43:52.618 >   "value_template": "{{value_json.tbat}}",
+22:43:52.618 >   "unique_id": "BMS-0-tbat",
+22:43:52.663 >   "expire_after": 60,
+22:43:52.663 >   "entity_category": "diagnostic"
+22:43:52.663 > }
+22:43:52.663 > MQTT:published config
+22:43:52.663 > publishConfOfEntity: index_of_item=3
+22:43:52.663 > {
+22:43:52.663 >   "name": "tbat",
+22:43:52.663 >   "device_class": "temperature",
+22:43:52.663 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:52.663 >   "device": {
+22:43:52.663 >     "model": "BatCC01",
+22:43:52.663 >     "identifiers": "001",
+22:43:52.663 >     "name": "BMS",
+22:43:52.663 >     "sw_version": "1.0.1",
+22:43:52.663 >     "manufacturer": "DK",
+22:43:52.663 >     "hw_version": "1.0"
+22:43:52.663 >   },
+22:43:52.663 >   "object_id": "BMS-0-tbat",
+22:43:52.663 >   "unit_of_measurement": "°C",
+22:43:52.663 >   "value_template": "{{value_json.tbat}}",
+22:43:52.707 >   "unique_id": "BMS-0-tbat",
+22:43:52.707 >   "expire_after": 60,
+22:43:52.707 >   "entity_category": "diagnostic"
+22:43:52.707 > }
+22:43:52.707 > MQTT:published config
+22:43:52.707 > publishConfOfEntity: index_of_item=4
+22:43:52.707 > {
+22:43:52.707 >   "name": "tbat",
+22:43:52.707 >   "device_class": "temperature",
+22:43:52.707 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:52.707 >   "device": {
+22:43:52.707 >     "model": "BatCC01",
+22:43:52.707 >     "identifiers": "001",
+22:43:52.707 >     "name": "BMS",
+22:43:52.707 >     "sw_version": "1.0.1",
+22:43:52.707 >     "manufacturer": "DK",
+22:43:52.707 >     "hw_version": "1.0"
+22:43:52.707 >   },
+22:43:52.707 >   "object_id": "BMS-0-tbat",
+22:43:52.707 >   "unit_of_measurement": "°C",
+22:43:52.707 >   "value_template": "{{value_json.tbat}}",
+22:43:52.751 >   "unique_id": "BMS-0-tbat",
+22:43:52.751 >   "expire_after": 60,
+22:43:52.751 >   "entity_category": "diagnostic"
+22:43:52.751 > }
+22:43:52.751 > MQTT:published config
+22:43:52.751 > publishConfOfEntity: index_of_item=5
+22:43:52.751 > {
+22:43:52.751 >   "name": "tbat5",
+22:43:52.751 >   "device_class": "temperature",
+22:43:52.751 >   "state_topic": "homeassistant/sensor/BMS_0/state",
+22:43:52.751 >   "device": {
+22:43:52.751 >     "model": "BatCC01",
+22:43:52.751 >     "identifiers": "001",
+22:43:52.751 >     "name": "BMS",
+22:43:52.751 >     "sw_version": "1.0.1",
+22:43:52.751 >     "manufacturer": "DK",
+22:43:52.751 >     "hw_version": "1.0"
+22:43:52.751 >   },
+22:43:52.751 >   "object_id": "BMS-0-tbat5",
+22:43:52.751 >   "unit_of_measurement": "°C",
+22:43:52.787 >   "value_template": "{{value_json.tbat}}5",
+22:43:52.787 >   "unique_id": "BMS-0-tbat5",
+22:43:52.787 >   "expire_after": 60,
+22:43:52.787 >   "entity_category": "diagnostic"
+22:43:52.787 > }
+22:43:52.787 > MQTT:published config
+22:43:52.787 > registerEntity
+22:43:52.787 > MQTT:published data
+22:43:52.787 > {
+22:43:52.787 >   "soc": 88.2
+22:43:52.787 > }
+22:43:52.787 > MQTT:published data
+22:43:52.787 > {
+22:43:52.787 >   "alert": "alert_text"
+22:43:52.787 > }
+22:43:52.787 > MQTT:published data
+22:43:52.787 > {
+22:43:52.787 >   "warning": "warning_text"
+22:43:52.787 > }
+22:43:52.787 > MQTT:published data
+22:43:52.787 > {
+22:43:52.787 >   "ubat": 259.1
+22:43:52.787 > }
+22:43:52.787 > MQTT:published data
+22:43:52.792 > {
+22:43:52.792 >   "ibat": 9.9
+22:43:52.792 > }
+22:43:52.792 > MQTT:published data
+22:43:52.796 > {
+22:43:52.796 >   "tbat": 10
+22:43:52.796 > }
+22:43:52.796 > MQTT:published data
+22:43:52.801 > {
+22:43:52.801 >   "tbat": 10.1
+22:43:52.801 > }
+22:43:52.801 > MQTT:published data
+22:43:52.807 > {
+22:43:52.807 >   "tbat": 10.2
+22:43:52.807 > }
+22:43:52.807 > MQTT:published data
+22:43:52.813 > {
+22:43:52.813 >   "tbat": 10.3
+22:43:52.813 > }
+22:43:52.813 > MQTT:published data
+22:43:52.817 > {
+22:43:52.818 >   "tbat": 10.4
+22:43:52.818 > }
+22:43:52.818 > MQTT:published data
+22:43:52.824 > {
+22:43:52.824 >   "tbat5": 10.5
+22:43:52.824 > }
+22:43:52.824 > publisValue
+22:43:52.824 > HTTP server started
+22:43:52.824 >
+22:43:52.924 > *WM: freeing allocated params!
+22:43:52.924 > MQTT:published data
+22:43:52.936 > {
+22:43:52.936 >   "alert": "alert_text"
+22:43:52.936 > }
+22:43:52.936 > MQTT:published data
+22:43:52.936 > {
+22:43:52.936 >   "warning": "warning_text"
+22:43:52.936 > }
+22:43:52.936 > MQTT:published data
+22:43:52.936 > {
+22:43:52.936 >   "ibat": 9.9
+22:43:52.936 > }
+22:43:53.131 > MQTT:published data
+22:43:53.139 > {
+22:43:53.139 >   "ibat": 9.9
+22:43:53.139 > }
+22:43:53.330 > MQTT:published data
+22:43:53.334 > {
+22:43:53.335 >   "ibat": 9.9
+22:43:53.335 > }
+22:43:53.530 > MQTT:published data
+22:43:53.535 > {
+22:43:53.536 >   "ibat": 9.9
+22:43:53.536 > }
+22:43:53.730 > MQTT:published data
+22:43:53.742 > {
+22:43:53.742 >   "ibat": 9.9
+22:43:53.742 > }
+22:43:53.922 > MQTT:published data
+22:43:53.934 > {
+22:43:53.935 >   "alert": "alert_text"
+22:43:53.935 > }
+22:43:53.935 > MQTT:published data
+22:43:53.944 > {
+22:43:53.945 >   "warning": "warning_text"
+22:43:53.945 > }
+22:43:53.945 > MQTT:published data
+22:43:53.949 > {
+22:43:53.950 >   "ibat": 9.9
+22:43:53.950 > }
+22:43:54.141 > MQTT:published data
+22:43:54.147 > {
+22:43:54.147 >   "ibat": 9.9
+22:43:54.147 > }
+22:43:54.342 > MQTT:published data
+22:43:54.347 > {
+22:43:54.347 >   "ibat": 9.9
+22:43:54.347 > }
+22:43:54.542 > MQTT:published data
+22:43:54.547 > {
+22:43:54.547 >   "ibat": 9.9
+22:43:54.547 > }
+22:43:54.742 > MQTT:published data
+22:43:54.747 > {
+22:43:54.747 >   "ibat": 9.9
+22:43:54.747 > }
+22:43:54.922 > MQTT:published data
+22:43:54.932 > {
+22:43:54.932 >   "alert": "alert_text"
+22:43:54.932 > }
+22:43:54.932 > MQTT:published data
+22:43:54.932 > {
+22:43:54.932 >   "warning": "warning_text"
+22:43:54.932 > }
+22:43:54.942 > MQTT:published data
+22:43:54.946 > {
+22:43:54.946 >   "ibat": 9.9
+22:43:54.946 > }
+22:43:55.141 > MQTT:published data
+22:43:55.156 > {
+22:43:55.156 >   "ibat": 9.9
+22:43:55.156 > }
+22:43:55.342 > MQTT:published data
+22:43:55.353 > {
+22:43:55.353 >   "ibat": 9.9
+22:43:55.353 > }
+22:43:55.542 > MQTT:published data
+22:43:55.546 > {
+22:43:55.547 >   "ibat": 9.9
+22:43:55.547 > }
+22:43:55.742 > MQTT:published data
+22:43:55.747 > {
+22:43:55.747 >   "ibat": 9.9
+22:43:55.747 > }
+22:43:55.922 > MQTT:published data
+22:43:55.930 > {
+22:43:55.930 >   "alert": "alert_text"
+22:43:55.930 > }
+22:43:55.930 > MQTT:published data
+22:43:55.934 > {
+22:43:55.934 >   "warning": "warning_text"
+22:43:55.934 > }
+22:43:55.942 > MQTT:published data
+22:43:55.947 > {
+22:43:55.947 >   "ibat": 9.9
+22:43:55.947 > }
+22:43:56.141 > MQTT:published data
+22:43:56.149 > {
+22:43:56.150 >   "ibat": 9.9
+22:43:56.150 > }
+22:43:56.342 > MQTT:published data
+22:43:56.361 > {
+22:43:56.361 >   "ibat": 9.9
+22:43:56.361 > }
+22:43:56.542 > MQTT:published data
+22:43:56.552 > {
+22:43:56.552 >   "ibat": 9.9
+22:43:56.552 > }
+22:43:56.742 > MQTT:published data
+22:43:56.753 > {
+22:43:56.753 >   "ibat": 9.9
+22:43:56.753 > }
+22:43:56.922 > MQTT:published data
+22:43:56.937 > {
+22:43:56.937 >   "alert": "alert_text"
+22:43:56.937 > }
+22:43:56.937 > MQTT:published data
+22:43:56.949 > {
+22:43:56.950 >   "warning": "warning_text"
+22:43:56.950 > }
+22:43:56.950 > MQTT:published data
+22:43:56.950 > {
+22:43:56.950 >   "ibat": 9.9
+22:43:56.950 > }
+22:43:57.145 > MQTT:published data
+22:43:57.150 > {
+22:43:57.150 >   "ibat": 9.9
+22:43:57.150 > }

@@ -13,7 +13,7 @@
 #include "DebugFnc.h"
 
 
-#define getIndexStr(index_of_entity) ((m_enitiyDB[index_of_entity]->entNumber==1)? "":String(index_of_item))
+#define getIndexStr(entIndex,itemIndex) ((m_enitiyDB[entIndex]->entNumber==1)? "":String(itemIndex))
 
 
 MQTTClient Hamqtt::Client(768);
@@ -89,7 +89,7 @@ void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt
   m_enitiyDB[m_nrOFRegEnt]->cmdCallback=cmdCallback;
   m_enitiyDB[m_nrOFRegEnt]->component = component;
   m_enitiyDB[m_nrOFRegEnt]->entity_category=entity_category;
-  if(m_devIndex==nullptr){
+  if(m_devIndex==nullptr || strcmp(m_devIndex,"")==0){
     m_enitiyDB[m_nrOFRegEnt]->stateTopicFull= (String)DISCOVERY_PREFIX+(String)"/"+ (String)m_enitiyDB[m_nrOFRegEnt]->component + (String)"/"+String(m_deviceName) + (String)"/state";
     m_enitiyDB[m_nrOFRegEnt]->object_id=String(m_deviceName) +String("-") +String(ent_name);    
     if(strcmp(component,"number")==0){
@@ -126,8 +126,8 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
   StaticJsonBuffer<1500> jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();  
 
-
-  json["name"]=String(m_enitiyDB[index_of_entity]->ent_name)+getIndexStr(index_of_item);
+  DEBUG_LOG(true,"publishConfOfEntity: index_of_item=",index_of_item);  
+  json["name"]=String(m_enitiyDB[index_of_entity]->ent_name)+getIndexStr(index_of_entity,index_of_item);
   if(m_enitiyDB[index_of_entity]->class_ != nullptr)
     json["device_class"]=m_enitiyDB[index_of_entity]->class_;
   if(m_enitiyDB[index_of_entity]->stateTopicFull!=nullptr){
@@ -159,22 +159,25 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
     assert(m_enitiyDB[index_of_entity]->entNumber==1);
     json["command_topic"]=m_enitiyDB[index_of_entity]->cmdTopicFull; 
   }
-  json["object_id"]=m_enitiyDB[index_of_entity]->object_id+getIndexStr(index_of_item); 
-  json["unit_of_measurement"]=m_enitiyDB[index_of_entity]->unit_of_measurement;
-  json["value_template"]=String("{{value_json.") + String(m_enitiyDB[index_of_entity]->ent_name) + String("}}")+getIndexStr(index_of_item);
+  json["object_id"]=m_enitiyDB[index_of_entity]->object_id+getIndexStr(index_of_entity,index_of_item); 
+  if(m_enitiyDB[index_of_entity]->unit_of_measurement==nullptr)
+    json["unit_of_measurement"]="";
+  else
+    json["unit_of_measurement"]=m_enitiyDB[index_of_entity]->unit_of_measurement;
+  json["value_template"]=String("{{value_json.") + String(m_enitiyDB[index_of_entity]->ent_name) + String("}}")+getIndexStr(index_of_entity,index_of_item);
   
   if(m_enitiyDB[index_of_entity]->unique_id != nullptr)
-    json["unique_id"]= m_enitiyDB[index_of_entity]->unique_id+getIndexStr(index_of_item);
+    json["unique_id"]= m_enitiyDB[index_of_entity]->unique_id+getIndexStr(index_of_entity,index_of_item);
   else  
-    json["unique_id"]= m_enitiyDB[index_of_entity]->object_id+getIndexStr(index_of_item); 
+    json["unique_id"]= m_enitiyDB[index_of_entity]->object_id+getIndexStr(index_of_entity,index_of_item); 
   
   
-  json["expire_after"]=m_expire_after;
+  json["expire_after"]=getPeriod(index_of_entity) * m_expire_after;
   if(m_enitiyDB[index_of_entity]->icon != nullptr)
     json["icon"]=m_enitiyDB[index_of_entity]->icon;
   if(m_enitiyDB[index_of_entity]->entity_category != nullptr)
     json["entity_category"]=m_enitiyDB[index_of_entity]->entity_category;
-  String confTopic = (String)DISCOVERY_PREFIX+(String)"/"+(String)m_enitiyDB[index_of_entity]->component+ String("/") +String(m_enitiyDB[index_of_entity]->object_id)+getIndexStr(index_of_item) +"/config";
+  String confTopic = (String)DISCOVERY_PREFIX+(String)"/"+(String)m_enitiyDB[index_of_entity]->component+ String("/") +String(m_enitiyDB[index_of_entity]->object_id)+getIndexStr(index_of_entity,index_of_item) +"/config";
   if(json.success()){
     String str_buf;
     json.prettyPrintTo(str_buf);
@@ -193,14 +196,14 @@ void Hamqtt::publishEntity(int index_of_entity, int index_of_item){
   
   switch(m_enitiyDB[index_of_entity]->vType){
     case VTYPE_INT:
-      json[m_enitiyDB[index_of_entity]->valueName + getIndexStr(index_of_item)]=(int)m_enitiyDB[index_of_entity]->value.i;
+      json[m_enitiyDB[index_of_entity]->valueName + getIndexStr(index_of_entity,index_of_item)]=(int)m_enitiyDB[index_of_entity]->value.i;
       break;
     case VTYPE_FLOAT:
-      json[m_enitiyDB[index_of_entity]->valueName+ getIndexStr(index_of_item)]=(float)m_enitiyDB[index_of_entity]->value.f;
+      json[m_enitiyDB[index_of_entity]->valueName+ getIndexStr(index_of_entity,index_of_item)]=(float)m_enitiyDB[index_of_entity]->value.f;
       break;  
 
     case VTYPE_STRING:
-      json[m_enitiyDB[index_of_entity]->valueName+ getIndexStr(index_of_item)]=(char*)m_enitiyDB[index_of_entity]->value.s;
+      json[m_enitiyDB[index_of_entity]->valueName+ getIndexStr(index_of_entity,index_of_item)]=(char*)m_enitiyDB[index_of_entity]->value.s;
       break;
 
     case VTYPE_UNDEF:  
@@ -320,4 +323,19 @@ void Hamqtt::messageReceived(String &topic, String &payload){
       }
     }
   }  
+}
+
+unsigned long Hamqtt::getPeriod(int index_of_entity){
+  
+  switch(m_enitiyDB[index_of_entity]->perType){
+    case PERTYPE_NORMAL:
+      return m_DatasendNormalPer;
+    case PERTYPE_LOWSPEED:
+      return m_DatasendLowPer;
+    case PERTYPE_HIGHSPEED:
+      return m_DatasendHighPer;
+  }
+
+  assert(false);
+  return 0;
 }

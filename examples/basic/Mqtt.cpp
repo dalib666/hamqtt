@@ -4,7 +4,7 @@
 
 #include "DebugFnc.h"  
 
-IPAddress BrokerIP(192,168,1,6);     
+IPAddress BrokerIP(192,168,1,5);     
 char MqttUserName[] = "homeassistant"; 
 char MqttPass[] = "ol3uuNeek6ke7eich8aiva7ZoxoiVei1aiteith0aighae0ieP7pahFaNgeiP8de";
 #define SW_VERSION "1.0.1"
