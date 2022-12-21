@@ -164,7 +164,7 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
     json["unit_of_measurement"]="";
   else
     json["unit_of_measurement"]=m_enitiyDB[index_of_entity]->unit_of_measurement;
-  json["value_template"]=String("{{value_json.") + String(m_enitiyDB[index_of_entity]->ent_name) + String("}}")+getIndexStr(index_of_entity,index_of_item);
+  json["value_template"]=String("{{value_json.") + String(m_enitiyDB[index_of_entity]->ent_name)+getIndexStr(index_of_entity,index_of_item) + String("}}");
   
   if(m_enitiyDB[index_of_entity]->unique_id != nullptr)
     json["unique_id"]= m_enitiyDB[index_of_entity]->unique_id+getIndexStr(index_of_entity,index_of_item);
