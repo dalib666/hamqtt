@@ -172,7 +172,7 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
     json["unique_id"]= m_enitiyDB[index_of_entity]->object_id+getIndexStr(index_of_entity,index_of_item); 
   
   
-  json["expire_after"]=getPeriod(index_of_entity) * m_expire_after;
+  json["expire_after"]=getPeriod(index_of_entity) * m_expire_after/1000;
   if(m_enitiyDB[index_of_entity]->icon != nullptr)
     json["icon"]=m_enitiyDB[index_of_entity]->icon;
   if(m_enitiyDB[index_of_entity]->entity_category != nullptr)
