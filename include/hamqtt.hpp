@@ -36,10 +36,10 @@ class Hamqtt{
     typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
 
     static void init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer=0,unsigned int lowPer=0,unsigned int highPer=0);
-    Hamqtt(const char * devName,const char *  devIndex=nullptr, const char * model=nullptr, const char * manufacturer=nullptr, const char * swVersion=nullptr, const char * identifiers=nullptr, const char * configuration_url=nullptr, const char * hw_version=nullptr, const char * via_device=nullptr, int expire_after=3);
-    void registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,const char * unique_id=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr, int entNumber=1);
-    void registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,const char * icon=nullptr, int entNumber=1);	
-    void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr);
+    Hamqtt(const char * devName,const char *  devIndex=nullptr, PeriodType grPerType=PERTYPE_LOWSPEED, const char * model=nullptr, const char * manufacturer=nullptr, const char * swVersion=nullptr, const char * identifiers=nullptr, const char * configuration_url=nullptr, const char * hw_version=nullptr, const char * via_device=nullptr, int expire_after=3);
+    void registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,const char * unique_id=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr, int entNumber=1,bool grStTopic=false);
+    void registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,const char * icon=nullptr, int entNumber=1,bool grStTopic=false);	
+    void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false);
     void publishValue(const char * ent_name, const char * value,int item=-1);  
     void publishValue(const char * ent_name, float value,int item=-1);
     static void main();
@@ -62,7 +62,9 @@ class Hamqtt{
     const char * m_configuration_url; 
     const char * m_hw_version;
     const char * m_via_device;
-
+    String m_grStateTopicFull;
+    bool m_grStateTopic;
+    PeriodType    m_grPerType;
 
     static Hamqtt * m_regObjects[MAX_REG_OBJ];
     static int m_regObjNumb;
@@ -96,12 +98,14 @@ class Hamqtt{
         String object_id;
         const char * entity_category;
         int entNumber;
+        bool grStateTopic;
     };
     static void connect();    
     EntityConfData * m_enitiyDB[MAX_REG_ENT];
     void publisValuesPer(PeriodType period);  
     void publishEntity(int index_of_entity, int index_of_item);  
     void publishConfOfEntity(int index_of_entity, int index_of_item);
+    void publishGroupedEntities();
     static void messageReceived(String &topic, String &payload);
     unsigned long getPeriod(int index_of_entity);
     static WiFiClient * m_wifiClientPtr;

@@ -31,9 +31,11 @@ MQTTClient Hamqtt::Client(768);
   unsigned long Hamqtt::m_datasend_highspeed_ltime=0;
   const char *  Hamqtt::DISCOVERY_PREFIX="homeassistant";
  
-//static EntityConfData * Hamqtt::m_enitiyDB[MAX_REG_ENT];
-Hamqtt::Hamqtt(const char * devName,const char *  devIndex, const char * model, const char * manufacturer, const char * swVersion, const char * identifiers, const char * configuration_url, const char * hw_version, const char * via_device, int expire_after):\
-m_devIndex(devIndex),m_expire_after(expire_after),m_deviceName(devName),m_model(model),m_manufacturer(manufacturer),m_swVersion(swVersion),m_identifiers(identifiers),m_configuration_url(configuration_url),m_hw_version(hw_version),m_via_device(via_device){
+//static EntityConfData * Hamqtt::m_enitiyDB[MAX_REG_ENT]; 
+Hamqtt::Hamqtt(const char * devName,const char *  devIndex, PeriodType grPerType, const char * model, const char * manufacturer, const char * swVersion, const char * identifiers, const char * configuration_url, const char * hw_version, const char * via_device, int expire_after):\
+m_devIndex(devIndex),m_expire_after(expire_after),m_deviceName(devName),m_model(model),m_manufacturer(manufacturer),m_swVersion(swVersion),m_identifiers(identifiers),m_configuration_url(configuration_url),m_hw_version(hw_version),m_via_device(via_device),m_grPerType(grPerType){
+  if(m_devIndex==nullptr)
+    m_devIndex="";
   m_nrOFRegEnt=0;
   assert(m_regObjNumb<MAX_REG_OBJ);
   assert(m_deviceName!=nullptr);
@@ -67,19 +69,19 @@ void Hamqtt::connect() {
 }
 
 
-void Hamqtt::registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,int entNumber){
-  registerEntity("sensor",ent_name,perType,class_,unit_of_measurement,nullptr,icon,nullptr,"diagnostic",entNumber);
+void Hamqtt::registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,int entNumber,bool grStTopic){
+  registerEntity("sensor",ent_name,perType,class_,unit_of_measurement,nullptr,icon,nullptr,"diagnostic",entNumber,grStTopic);
 }
-void Hamqtt::registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,CmdCallbackType cmdCallback){
-  registerEntity("number",ent_name,perType,class_,unit_of_measurement,nullptr,icon,cmdCallback,"config");
+void Hamqtt::registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,CmdCallbackType cmdCallback,bool grStTopic){
+  registerEntity("number",ent_name,perType,class_,unit_of_measurement,nullptr,icon,cmdCallback,"config",1,grStTopic);
 }
 
-
-void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt::PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id,const char * icon,CmdCallbackType cmdCallback,const char * entity_category, int entNumber){
+void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt::PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id,const char * icon,CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grStTopic){
   assert(m_nrOFRegEnt<MAX_REG_ENT);
  
   m_enitiyDB[m_nrOFRegEnt]=new EntityConfData[1];
   assert(m_enitiyDB[m_nrOFRegEnt]!=nullptr);
+  m_enitiyDB[m_nrOFRegEnt]->grStateTopic =grStTopic;
   m_enitiyDB[m_nrOFRegEnt]->entNumber=entNumber;
   m_enitiyDB[m_nrOFRegEnt]->ent_name=ent_name;
   m_enitiyDB[m_nrOFRegEnt]->perType= perType;
@@ -89,20 +91,21 @@ void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt
   m_enitiyDB[m_nrOFRegEnt]->cmdCallback=cmdCallback;
   m_enitiyDB[m_nrOFRegEnt]->component = component;
   m_enitiyDB[m_nrOFRegEnt]->entity_category=entity_category;
-  if(m_devIndex==nullptr || strcmp(m_devIndex,"")==0){
-    m_enitiyDB[m_nrOFRegEnt]->stateTopicFull= (String)DISCOVERY_PREFIX+(String)"/"+ (String)m_enitiyDB[m_nrOFRegEnt]->component + (String)"/"+String(m_deviceName) + (String)"/state";
-    m_enitiyDB[m_nrOFRegEnt]->object_id=String(m_deviceName) +String("-") +String(ent_name);    
-    if(strcmp(component,"number")==0){
-      m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull=String(DISCOVERY_PREFIX) + String("/") +  String(m_enitiyDB[m_nrOFRegEnt]->component) + String("/") +String(m_deviceName) + String("/set");
-    }
+
+  if(grStTopic){
+    m_grStateTopic=true;
+    if(m_grStateTopicFull.isEmpty())
+      m_grStateTopicFull=(String)DISCOVERY_PREFIX+(String)"/"+ (String)m_enitiyDB[m_nrOFRegEnt]->component + (String)"/"+String(m_deviceName) + String(m_devIndex)+ (String)"/state"; //set topic common for grouped entities
+    m_enitiyDB[m_nrOFRegEnt]->stateTopicFull = m_grStateTopicFull;	
   }
-  else{
-    m_enitiyDB[m_nrOFRegEnt]->stateTopicFull= (String)DISCOVERY_PREFIX+(String)"/"+ (String)m_enitiyDB[m_nrOFRegEnt]->component + (String)"/"+String(m_deviceName) +String("_") + String(m_devIndex)+ (String)"/state";
-    m_enitiyDB[m_nrOFRegEnt]->object_id=String(m_deviceName) +String("-") + String(m_devIndex) + String("-") +String(ent_name);
-    if(strcmp(component,"number")==0){
-      m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull=String(DISCOVERY_PREFIX) + String("/") +  String(m_enitiyDB[m_nrOFRegEnt]->component) + String("/") +String(m_deviceName) +String("_") + String(m_devIndex)+ String("/set");
-    }
+  else
+    m_enitiyDB[m_nrOFRegEnt]->stateTopicFull= (String)DISCOVERY_PREFIX+(String)"/"+ (String)m_enitiyDB[m_nrOFRegEnt]->component + (String)"/"+String(m_deviceName) + String(m_devIndex)+(String)"/" + String(m_enitiyDB[m_nrOFRegEnt]->ent_name) + (String)"/state"; //set topic individual for entity
+
+  m_enitiyDB[m_nrOFRegEnt]->object_id=String(m_deviceName) + String(m_devIndex) + String("-") +String(ent_name);
+  if(strcmp(component,"number")==0){
+    m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull=String(DISCOVERY_PREFIX) + String("/") +  String(m_enitiyDB[m_nrOFRegEnt]->component) + String("/") +String(m_deviceName) + String(m_devIndex)+  String("/set");
   }
+    
  
   m_enitiyDB[m_nrOFRegEnt]->icon=icon;
   m_enitiyDB[m_nrOFRegEnt]->vType=VTYPE_UNDEF;
@@ -257,26 +260,66 @@ void Hamqtt::publishValue(const char  * ent_name, float value, int item){
   }
   DEBUG_LOG0(true,"MQTT:publisValue:entity not found");
 }
-
+/**
+ * @brief publish value of entity, only entites which are not grouped in one topic
+*/
 void Hamqtt::publisValuesPer(PeriodType period){
   for(int i=0;i<m_nrOFRegEnt;i++){
-    if(m_enitiyDB[i]->perType==period && m_enitiyDB[i]->vType!=VTYPE_UNDEF){
-      for(int j=0;j<m_enitiyDB[i]->entNumber;j++){
-        publishEntity(i,j);
-      }  
+    if(m_enitiyDB[i]->perType==period && m_enitiyDB[i]->vType!=VTYPE_UNDEF && !m_enitiyDB[i]->grStateTopic){
+      assert(m_enitiyDB[i]->entNumber=1); //multiple entities must be grouped in one topic
+      publishEntity(i,0);
     }
+  }
+}
+
+void Hamqtt::publishGroupedEntities(){
+  StaticJsonBuffer<1000> jsonBuffer;
+  JsonObject& json = jsonBuffer.createObject(); 
+  for(int i=0;i<m_nrOFRegEnt;i++){
+    if(m_enitiyDB[i]->grStateTopic){
+      for(int j=0;j<m_enitiyDB[i]->entNumber;j++){
+        switch(m_enitiyDB[i]->vType){
+          case VTYPE_INT:
+            json[m_enitiyDB[i]->valueName + getIndexStr(i,j)]=(int)m_enitiyDB[i]->value.i;
+            break;
+          case VTYPE_FLOAT:
+            json[m_enitiyDB[i]->valueName+ getIndexStr(i,j)]=(float)m_enitiyDB[i]->value.f;
+            break;  
+
+          case VTYPE_STRING:
+            json[m_enitiyDB[i]->valueName+ getIndexStr(i,j)]=(char*)m_enitiyDB[i]->value.s;
+            break;
+
+          case VTYPE_UNDEF:  
+            assert(false);
+          break;
+        }
+      }
+    }
+  }
+  if(json.success()){
+    DEBUG_LOG0(true,"MQTT:published data");
+    String str_buf;
+    json.prettyPrintTo(str_buf);
+    bool pubStatus=Client.publish(m_grStateTopicFull,str_buf ,true,1);
+    assert(pubStatus);
+    DEBUG_LOG0_NOF(true,str_buf);
+  }else{  
+    DEBUG_LOG0(!json.success(),"MQTT:publish error");
   }
 }
 
 
 void Hamqtt::main(){
-  unsigned long delTime=0;
+  unsigned long delTime=0;  
   delTime = millis() - m_datasend_normal_ltime;  
   Client.loop();
   if(delTime >= m_DatasendNormalPer){
     m_datasend_normal_ltime = millis();
     for(int objInd=0;objInd<m_regObjNumb;objInd++){
       Hamqtt * objPtr=m_regObjects[objInd];
+      if(objPtr->m_grStateTopic && objPtr->m_grPerType==PERTYPE_NORMAL)
+        objPtr->publishGroupedEntities();
       if(WiFi.status() == WL_CONNECTED){
         if (!Client.connected())connect();
         objPtr->publisValuesPer(PERTYPE_NORMAL);
@@ -289,6 +332,8 @@ void Hamqtt::main(){
     m_datasend_lowspeed_ltime = millis();
     for(int objInd=0;objInd<m_regObjNumb;objInd++){
       Hamqtt * objPtr=m_regObjects[objInd];   
+      if(objPtr->m_grStateTopic && objPtr->m_grPerType==PERTYPE_LOWSPEED)
+        objPtr->publishGroupedEntities();
       if(WiFi.status() == WL_CONNECTED){
         if (!Client.connected())connect();
         objPtr->publisValuesPer(PERTYPE_LOWSPEED);
@@ -301,6 +346,8 @@ void Hamqtt::main(){
     m_datasend_highspeed_ltime = millis();
     for(int objInd=0;objInd<m_regObjNumb;objInd++){
       Hamqtt * objPtr=m_regObjects[objInd];   
+      if(objPtr->m_grStateTopic && objPtr->m_grPerType==PERTYPE_HIGHSPEED)
+        objPtr->publishGroupedEntities();
       if(WiFi.status() == WL_CONNECTED){
         if (!Client.connected())connect();
         objPtr->publisValuesPer(PERTYPE_HIGHSPEED);

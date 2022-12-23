@@ -19,7 +19,7 @@ const char ClientID[] ="WaterHeater";
 
 // Initialize the client library
 WiFiClient Wclient;
-Hamqtt DevObj("W_Heater", DEVICE_INDEX_NAME,"WHControl01","DK",SW_VERSION,"001","www.dummy.com",HW_VERSION,nullptr,EXPIRATION_TIME);
+Hamqtt DevObj("W_Heater", DEVICE_INDEX_NAME, Hamqtt::PERTYPE_LOWSPEED,"WHControl01","DK",SW_VERSION,"001","www.dummy.com",HW_VERSION,nullptr,EXPIRATION_TIME);
 
 void entCallBack(int indOfEnt, String &payload){
   DEBUG_LOG(true,"entCallBack:indOfEnt= ",indOfEnt);

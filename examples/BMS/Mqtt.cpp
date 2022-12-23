@@ -4,7 +4,7 @@
 
 #include "DebugFnc.h"  
 
-IPAddress BrokerIP(192,168,1,5);     
+IPAddress BrokerIP(192,168,1,2);     
 char MqttUserName[] = "homeassistant"; 
 char MqttPass[] = "ol3uuNeek6ke7eich8aiva7ZoxoiVei1aiteith0aighae0ieP7pahFaNgeiP8de";
 #define SW_VERSION "1.0.1"
@@ -17,7 +17,7 @@ char MqttPass[] = "ol3uuNeek6ke7eich8aiva7ZoxoiVei1aiteith0aighae0ieP7pahFaNgeiP
 
 // Initialize the client library
 WiFiClient Wclient;
-Hamqtt DevObj("BMS", nullptr,MODEL,"DK",SW_VERSION,"001",nullptr,HW_VERSION,nullptr,EXPIRATION_TIME);
+Hamqtt DevObj("BMS", nullptr,Hamqtt::PERTYPE_LOWSPEED,"BMS01","DK",SW_VERSION,"001",nullptr,HW_VERSION,nullptr,EXPIRATION_TIME);
 
 void entCallBack(int indOfEnt, String &payload){
   /*DEBUG_LOG(true,"entCallBack:indOfEnt= ",indOfEnt);
@@ -30,12 +30,12 @@ void Mqtt_init(){
     Hamqtt::init(&Wclient, BrokerIP,MqttUserName,MqttPass,MODEL);
     DEBUG_LOG0(true,"Mqtt init");
     //DevObj.registerEntity("sensor","Water_Temp",Hamqtt::PERTYPE_NORMAL,"temperature","°C",nullptr,"{{value_json.wTemp}}","mdi:thermometer");
-    DevObj.registerSensorEntity("soc",Hamqtt::PERTYPE_LOWSPEED,"battery","%");
+    DevObj.registerSensorEntity("soc",Hamqtt::PERTYPE_LOWSPEED,"battery","%",nullptr,1,true);
     DevObj.registerSensorEntity("alert",Hamqtt::PERTYPE_NORMAL,nullptr);
     DevObj.registerSensorEntity("warning",Hamqtt::PERTYPE_NORMAL,nullptr);  
-    DevObj.registerSensorEntity("ubat",Hamqtt::PERTYPE_LOWSPEED,"voltage","V");  
+    DevObj.registerSensorEntity("ubat",Hamqtt::PERTYPE_LOWSPEED,"voltage","V",nullptr,1,true);  
     DevObj.registerSensorEntity("ibat",Hamqtt::PERTYPE_NORMAL,"current","A");  
-    DevObj.registerSensorEntity("tbat",Hamqtt::PERTYPE_LOWSPEED,"temperature","°C",nullptr,6);      
+    DevObj.registerSensorEntity("tbat",Hamqtt::PERTYPE_LOWSPEED,"temperature","°C",nullptr,6,true);      
     DEBUG_LOG0(true,"registerEntity");
     DevObj.publishValue("soc", 88.2f); //test value
     DevObj.publishValue("alert", "alert_text"); //test value
