@@ -37,25 +37,41 @@ void Mqtt_init(){
     DevObj.registerSensorEntity("ibat",Hamqtt::PERTYPE_NORMAL,"current","A");  
     DevObj.registerSensorEntity("tbat",Hamqtt::PERTYPE_LOWSPEED,"temperature","°C",nullptr,6,true);      
     DEBUG_LOG0(true,"registerEntity");
-    DevObj.publishValue("soc", 88.2f); //test value
+    DevObj.writeValue("soc", 88.2f); //test value
     DevObj.publishValue("alert", "alert_text"); //test value
     DevObj.publishValue("warning", "warning_text"); //test value
-    DevObj.publishValue("ubat", 259.1f); //test value
+    DevObj.writeValue("ubat", 259.1f); //test value
     DevObj.publishValue("ibat", 9.9f); //test value
-    DevObj.publishValue("tbat", 10.0f,0); //test value
-    DevObj.publishValue("tbat", 10.1f,1); //test value
-    DevObj.publishValue("tbat", 10.2f,2); //test value    
-    DevObj.publishValue("tbat", 10.3f,3); //test value
-    DevObj.publishValue("tbat", 10.4f,4); //test value
-    DevObj.publishValue("tbat", 10.5f,5); //test value  
+    DevObj.writeValue("tbat", 10.0f,0); //test value
+    DevObj.writeValue("tbat", 10.1f,1); //test value
+    DevObj.writeValue("tbat", 10.2f,2); //test value    
+    DevObj.writeValue("tbat", 10.3f,3); //test value
+    DevObj.writeValue("tbat", 10.4f,4); //test value
+    DevObj.writeValue("tbat", 10.5f,5); //test value  
     DEBUG_LOG0(true,"publisValue");
 }
 
 void Mqtt_loop5s(){
-    static float testVal = 0.0f;
-    testVal+=1.1;
-    if (testVal > 100.0f) testVal = 0.0f;
+    static float tbat=0;
+    static float ubat=0;
+    static float ibat=0;
 
+    tbat+=1;
+    ubat+=0.2f;
+    ibat+=0.1f;
+
+    if (tbat > 100.0f) tbat = 0.0f;
+    if (ubat > 50.0f) ubat = 0.0f;
+    if (ibat > 20.0f) ibat = 0.0f;
+
+    DevObj.writeValue("tbat", tbat,0); //test value
+    DevObj.writeValue("tbat", tbat+0.1f,1); //test value
+    DevObj.writeValue("tbat", tbat+0.2f,2); //test value    
+    DevObj.writeValue("tbat", tbat+0.3f,3); //test value
+    DevObj.writeValue("tbat", tbat+0.4f,4); //test value
+    DevObj.writeValue("tbat", tbat+0.5f,5); //test value  
+    DevObj.writeValue("ubat", ubat); //test value
+    DevObj.publishValue("ibat", ibat); //test value
     //DevObj.publishValue("Water_Temp", testVal); //test value
     
 }

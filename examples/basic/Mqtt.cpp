@@ -4,7 +4,7 @@
 
 #include "DebugFnc.h"  
 
-IPAddress BrokerIP(192,168,1,6);     
+IPAddress BrokerIP(192,168,1,2);     
 char MqttUserName[] = "homeassistant"; 
 char MqttPass[] = "ol3uuNeek6ke7eich8aiva7ZoxoiVei1aiteith0aighae0ieP7pahFaNgeiP8de";
 #define SW_VERSION "1.0.1"
@@ -19,7 +19,7 @@ const char ClientID[] ="WaterHeater";
 
 // Initialize the client library
 WiFiClient Wclient;
-Hamqtt DevObj("W_Heater", DEVICE_INDEX_NAME, Hamqtt::PERTYPE_LOWSPEED,"WHControl01","DK",SW_VERSION,"001","www.dummy.com",HW_VERSION,nullptr,EXPIRATION_TIME);
+Hamqtt DevObj("W_Heater", DEVICE_INDEX_NAME, Hamqtt::PERTYPE_LOWSPEED,"WHC01","DK",SW_VERSION,"002",nullptr,HW_VERSION,nullptr,EXPIRATION_TIME);
 
 void entCallBack(int indOfEnt, String &payload){
   DEBUG_LOG(true,"entCallBack:indOfEnt= ",indOfEnt);
@@ -32,8 +32,8 @@ void Mqtt_init(){
     Hamqtt::init(&Wclient, BrokerIP,MqttUserName,MqttPass,ClientID);
     DEBUG_LOG0(true,"Mqtt init");
     //DevObj.registerEntity("sensor","Water_Temp",Hamqtt::PERTYPE_NORMAL,"temperature","°C",nullptr,"{{value_json.wTemp}}","mdi:thermometer");
-    DevObj.registerSensorEntity("Water_Temp",Hamqtt::PERTYPE_NORMAL,"temperature","°C","{{value_json.wTemp}}","mdi:thermometer");
-    DevObj.registerEntity("number","Req_Power",Hamqtt::PERTYPE_NORMAL,nullptr,"W",nullptr,"{{value_json.actPower}}","material-symbols:mode-heat-outline",entCallBack);
+    DevObj.registerSensorEntity("Water_Temp",Hamqtt::PERTYPE_NORMAL,"temperature","°C",nullptr);
+    DevObj.registerNumberEntity("Req_Power",Hamqtt::PERTYPE_NORMAL,nullptr,"W","material-symbols:mode-heat-outline",entCallBack);
     DEBUG_LOG0(true,"registerEntity");
     DevObj.publishValue("Water_Temp", 21.9f); //test value
     DevObj.publishValue("Req_Power", 0.0f); //test value

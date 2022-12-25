@@ -17,9 +17,9 @@
 
 
 MQTTClient Hamqtt::Client(768);
-  unsigned long Hamqtt::m_DatasendNormalPer=Hamqtt::DATASEND_NORMAL_PER;
-  unsigned long Hamqtt::m_DatasendLowPer=Hamqtt::DATASEND_LOWSPEED_PER;
-  unsigned long Hamqtt::m_DatasendHighPer=Hamqtt::DATASEND_HIGHSPEED_PER;
+  unsigned long Hamqtt::m_DatasendNormalPer;
+  unsigned long Hamqtt::m_DatasendLowPer;
+  unsigned long Hamqtt::m_DatasendHighPer;
   const char * Hamqtt::m_mqttUserName;
   const char * Hamqtt::m_mqttPass;
   const char * Hamqtt::m_clientID; 
@@ -50,9 +50,9 @@ void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqt
   m_mqttUserName=mqttUserName;
   m_mqttPass=mqttPass;
   m_clientID=clientID;
-  if(normalPer!=0)m_DatasendNormalPer=normalPer;
-  if(lowPer!=0)m_DatasendLowPer=lowPer;
-  if(highPer!=0)m_DatasendHighPer=highPer;
+  m_DatasendNormalPer=normalPer;
+  m_DatasendLowPer=lowPer;
+  m_DatasendHighPer=highPer;
   
   connect();
 }
@@ -91,7 +91,8 @@ void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt
   m_enitiyDB[m_nrOFRegEnt]->cmdCallback=cmdCallback;
   m_enitiyDB[m_nrOFRegEnt]->component = component;
   m_enitiyDB[m_nrOFRegEnt]->entity_category=entity_category;
-
+  m_enitiyDB[m_nrOFRegEnt]->value=new ValueType[entNumber];
+  assert(m_enitiyDB[m_nrOFRegEnt]->value != nullptr);
   if(grStTopic){
     m_grStateTopic=true;
     if(m_grStateTopicFull.isEmpty())
@@ -109,7 +110,7 @@ void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt
  
   m_enitiyDB[m_nrOFRegEnt]->icon=icon;
   m_enitiyDB[m_nrOFRegEnt]->vType=VTYPE_UNDEF;
-  m_enitiyDB[m_nrOFRegEnt]->value.s=nullptr;
+  //m_enitiyDB[m_nrOFRegEnt]->value.s=nullptr;
 
   m_enitiyDB[m_nrOFRegEnt]->valueName=m_enitiyDB[m_nrOFRegEnt]->ent_name;
   
@@ -196,17 +197,18 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
 void Hamqtt::publishEntity(int index_of_entity, int index_of_item){
   StaticJsonBuffer<300> jsonBuffer;
   JsonObject& json = jsonBuffer.createObject(); 
-  
+
+  assert(m_enitiyDB[index_of_entity]->entNumber>index_of_item);
   switch(m_enitiyDB[index_of_entity]->vType){
     case VTYPE_INT:
-      json[m_enitiyDB[index_of_entity]->valueName + getIndexStr(index_of_entity,index_of_item)]=(int)m_enitiyDB[index_of_entity]->value.i;
+      json[m_enitiyDB[index_of_entity]->valueName + getIndexStr(index_of_entity,index_of_item)]=(int)m_enitiyDB[index_of_entity]->value[index_of_item].i;
       break;
     case VTYPE_FLOAT:
-      json[m_enitiyDB[index_of_entity]->valueName+ getIndexStr(index_of_entity,index_of_item)]=(float)m_enitiyDB[index_of_entity]->value.f;
+      json[m_enitiyDB[index_of_entity]->valueName+ getIndexStr(index_of_entity,index_of_item)]=(float)m_enitiyDB[index_of_entity]->value[index_of_item].f;
       break;  
 
     case VTYPE_STRING:
-      json[m_enitiyDB[index_of_entity]->valueName+ getIndexStr(index_of_entity,index_of_item)]=(char*)m_enitiyDB[index_of_entity]->value.s;
+      json[m_enitiyDB[index_of_entity]->valueName+ getIndexStr(index_of_entity,index_of_item)]=(char*)m_enitiyDB[index_of_entity]->value[index_of_item].s;
       break;
 
     case VTYPE_UNDEF:  
@@ -226,35 +228,29 @@ void Hamqtt::publishEntity(int index_of_entity, int index_of_item){
 }
 
 
-void Hamqtt::publishValue(const char  * ent_name, const char * value,int item){
+void Hamqtt::publishValue(const char  * ent_name, const char * value){
+
   for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
-      m_enitiyDB[i]->value.s=value;
+      assert(m_enitiyDB[i]->entNumber==1);
+      assert(m_enitiyDB[i]->grStateTopic==false);      
+      m_enitiyDB[i]->value[0].s=value;
       m_enitiyDB[i]->vType=VTYPE_STRING;
-      if(item >-1){
-        publishEntity(i,item);
-      }
-      else
-        for(int j=0;j<m_enitiyDB[i]->entNumber;j++)
-          publishEntity(i,j);
-        
+      publishEntity(i,0);
       return;
     }
   }
   DEBUG_LOG0(true,"MQTT:publisValue:entity not found");
 }
 
-void Hamqtt::publishValue(const char  * ent_name, float value, int item){
+void Hamqtt::publishValue(const char  * ent_name, float value){
   for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
-      m_enitiyDB[i]->value.f=value;
+      assert(m_enitiyDB[i]->entNumber==1);
+      assert(m_enitiyDB[i]->grStateTopic==false);  
+      m_enitiyDB[i]->value[0].f=value;
       m_enitiyDB[i]->vType=VTYPE_FLOAT;
-      if(item >-1){
-        publishEntity(i,item);
-      }
-      else
-        for(int j=0;j<m_enitiyDB[i]->entNumber;j++)
-          publishEntity(i,j);
+      publishEntity(i,0);
       return;
     }
   }
@@ -280,14 +276,14 @@ void Hamqtt::publishGroupedEntities(){
       for(int j=0;j<m_enitiyDB[i]->entNumber;j++){
         switch(m_enitiyDB[i]->vType){
           case VTYPE_INT:
-            json[m_enitiyDB[i]->valueName + getIndexStr(i,j)]=(int)m_enitiyDB[i]->value.i;
+            json[m_enitiyDB[i]->valueName + getIndexStr(i,j)]=(int)m_enitiyDB[i]->value[j].i;
             break;
           case VTYPE_FLOAT:
-            json[m_enitiyDB[i]->valueName+ getIndexStr(i,j)]=(float)m_enitiyDB[i]->value.f;
+            json[m_enitiyDB[i]->valueName+ getIndexStr(i,j)]=(float)m_enitiyDB[i]->value[j].f;
             break;  
 
           case VTYPE_STRING:
-            json[m_enitiyDB[i]->valueName+ getIndexStr(i,j)]=(char*)m_enitiyDB[i]->value.s;
+            json[m_enitiyDB[i]->valueName+ getIndexStr(i,j)]=(char*)m_enitiyDB[i]->value[j].s;
             break;
 
           case VTYPE_UNDEF:  
@@ -385,4 +381,27 @@ unsigned long Hamqtt::getPeriod(int index_of_entity){
 
   assert(false);
   return 0;
+}
+
+void Hamqtt::writeValue(const char * ent_name, const char * value,int item){
+  for(int i=0;i<m_nrOFRegEnt;i++){
+    if(m_enitiyDB[i]->ent_name==ent_name){
+      m_enitiyDB[i]->vType=VTYPE_STRING;
+      assert(m_enitiyDB[i]->entNumber>item);
+      m_enitiyDB[i]->value[item].s=value;
+      return;
+    }
+  }
+  assert(false);
+} 
+void Hamqtt::writeValue(const char * ent_name, float value,int item){
+  for(int i=0;i<m_nrOFRegEnt;i++){
+    if(m_enitiyDB[i]->ent_name==ent_name){
+      m_enitiyDB[i]->vType=VTYPE_FLOAT;
+      assert(m_enitiyDB[i]->entNumber>item);
+      m_enitiyDB[i]->value[item].f=value;
+      return;
+    }
+  }
+  assert(false);
 }

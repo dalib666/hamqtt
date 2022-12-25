@@ -1,11 +1,16 @@
-/* ================================================================================ */
-/*                                                                                  */
-/*   hamqtt.hpp                                                                     */
-/*                                                                                  */
-/*                                                                                  */
-/*   Description:                                                                   */
-/*               basic support for Home Assitant MQTT integration                   */
-/* ================================================================================ */
+/* =====================================================================================================*/
+/*                                                                                                      */
+/*   hamqtt.hpp                                                                                         */
+/*        Version info is in library.json file !                                                                                              */                                                                                                   */
+/*   Description:                                                                                       */
+/*              basic support for Home Assitant MQTT integration.                                       */
+/*              One Instance simulate one device. Per one instance is possible                          */
+/*              register more entities. One entity can be configured as "multiple"                      */
+/*              to simulate array data type. API contains also many configuration                       */
+/*                variables of MQTT componennt integration in HA, that API parameters are signed        */
+/*                by (HACV). Description of that parameters can be found in HA                          */
+/*                documentation e.g. "https://www.home-assistant.io/integrations/sensor.mqtt/"          */
+/* ==================================================================================================== */
 
 #ifndef HAMQTT_HPP
 #define HAMQTT_HPP
@@ -14,11 +19,90 @@
 #include <MQTTClient.h>
 
 class Hamqtt{
-    //default setting of params
-    static const unsigned long DATASEND_NORMAL_PER=1000ul;      
-    static const unsigned long DATASEND_LOWSPEED_PER=30000ul;
-    static const unsigned long DATASEND_HIGHSPEED_PER=200ul;
-    //constant parameters
+
+   
+    public:
+    enum PeriodType{
+        PERTYPE_NORMAL,
+        PERTYPE_LOWSPEED,
+        PERTYPE_HIGHSPEED,
+    }; 
+    typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
+    /**
+     * @brief init - init module, must be called before any other function
+     * @param wifiClient - pointer to WiFiClient object
+     * @param brokerIP - IP address of MQTT broker
+     * @param mqttUserName - MQTT user name
+     * @param mqttPass - MQTT password
+     * @param clientID - MQTT client ID
+     * @param normalPer - period of publish data for normal speed entity(PERTYPE_NORMAL)
+     * @param lowPer - period of publish data for low speed entity(PERTYPE_LOWSPEED)
+     * @param highPer - period of publish data for high speed entity(PERTYPE_HIGHSPEED)
+    */
+    static void init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer=5000,unsigned int lowPer=30000ul,unsigned int highPer=1000);
+    
+    /**
+     * @brief Hamqtt - constructor
+     * @param devName - device name
+     * @param devIndex - device index, use to distinguish multiple devices of the same type in the same network
+     * @param grPerType - period type for grouping entities into one topic
+     * @param model - (HACV)device model name 
+     * @param manufacturer - (HACV)device manufacturer name
+     * @param swVersion - (HACV)software version
+     * @param identifiers - (HACV)device identifiers, unique identifier of the device !!!
+     * @param configuration_url - (HACV)device configuration URL
+     * @param hw_version - (HACV)device hardware version
+     * @param via_device - (HACV)device via device
+     * @param expire_after - multiplier of parameter "perType" in registerxxxx functions to calculate (HACV)expire_after parameter
+    */
+    Hamqtt(const char * devName,const char *  devIndex=nullptr, PeriodType grPerType=PERTYPE_LOWSPEED, const char * model=nullptr,\
+        const char * manufacturer=nullptr, const char * swVersion=nullptr, const char * identifiers=nullptr, const char * configuration_url=nullptr,\
+        const char * hw_version=nullptr, const char * via_device=nullptr, int expire_after=3);
+    /**
+     * @brief registerEntity - universal register of entity
+     * @param component - HA component name of, see https://www.home-assistant.io/integrations/#search/MQTT
+     * @param ent_name - entity name, must be unique in device, if entity is multiple, index of item is added to name
+     * @param perType - period type of published state data
+     * @param class_ - (HACV)device class
+     * @param unit_of_measurement - (HACV)unit of measurement
+     * @param unique_id - (HACV)unique ID
+     * @param icon - (HACV)icon
+     * @param cmdCallback - callback function for command topic, if defined
+     * @param entity_category - (HACV)entity category
+     * @param entNumber - number of entity items, if entity is multiple
+     * @param grStTopic - all entities with set grStTopic=true are grouped into one state topic
+    */
+    void registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,\
+        const char * unit_of_measurement=nullptr,const char * unique_id=nullptr,const char * icon=nullptr,\
+        CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr, int entNumber=1,bool grStTopic=false);
+    /**
+     * @brief registerSensorEntity - optimised registering function for sensor component type, see https://www.home-assistant.io/integrations/sensor.mqtt/
+    */
+    void registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,\
+        const char * icon=nullptr, int entNumber=1,bool grStTopic=false);	
+    /**
+     * @brief registerBinarySensorEntity - optimised registering function for number component type, see https://www.home-assistant.io/integrations/number.mqtt/
+    */
+    void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,\
+        const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false);
+    /**
+     * @brief write and publish value - only for simple and ungrouped entity
+    */
+    void publishValue(const char * ent_name, const char * value);  
+    void publishValue(const char * ent_name, float value);
+    /**
+     * @brief write value - primary for grouped entity in one state topic, useable also for other entities
+    */
+    void writeValue(const char * ent_name, const char * value,int item=0);  
+    void writeValue(const char * ent_name, float value,int item=0);
+    /**
+     * @brief main - main function, must be called in loop()
+    */
+    static void main();
+    
+    private:
+    
+     //constant parameters
     static const int MAX_REG_ENT=20;
     static const int CONFIG_PER=60;
     static unsigned long m_datasend_normal_ltime;
@@ -27,24 +111,7 @@ class Hamqtt{
     static const int MAX_REG_OBJ = 5;
     static const int MAX_VALUE_NAME_LEN=30; 
     static const char * DISCOVERY_PREFIX;    
-    public:
-    enum PeriodType{
-        PERTYPE_NORMAL,
-        PERTYPE_LOWSPEED,
-        PERTYPE_HIGHSPEED,
-    }; 
-    typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
-
-    static void init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer=0,unsigned int lowPer=0,unsigned int highPer=0);
-    Hamqtt(const char * devName,const char *  devIndex=nullptr, PeriodType grPerType=PERTYPE_LOWSPEED, const char * model=nullptr, const char * manufacturer=nullptr, const char * swVersion=nullptr, const char * identifiers=nullptr, const char * configuration_url=nullptr, const char * hw_version=nullptr, const char * via_device=nullptr, int expire_after=3);
-    void registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,const char * unique_id=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr, int entNumber=1,bool grStTopic=false);
-    void registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,const char * icon=nullptr, int entNumber=1,bool grStTopic=false);	
-    void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false);
-    void publishValue(const char * ent_name, const char * value,int item=-1);  
-    void publishValue(const char * ent_name, float value,int item=-1);
-    static void main();
-    
-    private:
+        
     static unsigned long m_DatasendNormalPer;
     static unsigned long m_DatasendLowPer;
     static unsigned long m_DatasendHighPer;
@@ -92,7 +159,7 @@ class Hamqtt{
         CmdCallbackType cmdCallback;
         const char * icon;
         PeriodType    perType;
-        ValueType   value;
+        ValueType   *value;
         VType      vType;
         const char * component;
         String object_id;

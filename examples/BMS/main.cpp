@@ -9,7 +9,6 @@
 
 
 
-
 void setup() {
   Serial.begin(115200);
   DEBUG_PART(Serial.println("Starting..."));
@@ -73,7 +72,7 @@ static unsigned long lastloop=0;
     digitalWrite(LED_BUILTIN, BuiltInLed);
   }
 
-  if(millis()-lastloop>5000){
+  if((millis()-lastloop)>5000ul){
     lastloop=millis();
     Mqtt_loop5s();
   }
