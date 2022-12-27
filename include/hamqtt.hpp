@@ -1,7 +1,7 @@
 /* =====================================================================================================*/
 /*                                                                                                      */
 /*   hamqtt.hpp                                                                                         */
-/*        Version info is in library.json file !                                                                                              */                                                                                                   */
+/*        Version info is in library.json file !                                                        */
 /*   Description:                                                                                       */
 /*              basic support for Home Assitant MQTT integration.                                       */
 /*              One Instance simulate one device. Per one instance is possible                          */
@@ -87,9 +87,10 @@ class Hamqtt{
         const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false);
     /**
      * @brief write and publish value - only for simple and ungrouped entity
-    */
-    void publishValue(const char * ent_name, const char * value);  
-    void publishValue(const char * ent_name, float value);
+     * @param onlyCahnge - if true, value is published only if it is different from previous value 
+     */
+    void publishValue(const char * ent_name, const char * value,bool onlyChange=true);  
+    void publishValue(const char * ent_name, float value,bool onlyChange=true);
     /**
      * @brief write value - primary for grouped entity in one state topic, useable also for other entities
     */
@@ -98,6 +99,11 @@ class Hamqtt{
     /**
      * @brief main - main function, must be called in loop()
     */
+   /**
+    * @brief startPublishing - start publishing data to MQTT broker, i would be called after all entities are set to valid values.
+   */
+    void startPublishing();
+
     static void main();
     
     private:
@@ -167,6 +173,7 @@ class Hamqtt{
         int entNumber;
         bool grStateTopic;
     };
+    static void main_int(PeriodType perType);
     static void connect();    
     EntityConfData * m_enitiyDB[MAX_REG_ENT];
     void publisValuesPer(PeriodType period);  
@@ -177,5 +184,6 @@ class Hamqtt{
     unsigned long getPeriod(int index_of_entity);
     static WiFiClient * m_wifiClientPtr;
     static MQTTClient Client;  
+    bool m_pubEnabled;
 };
 #endif //HAMQTT_HPP

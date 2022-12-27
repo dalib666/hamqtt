@@ -41,6 +41,7 @@ m_devIndex(devIndex),m_expire_after(expire_after),m_deviceName(devName),m_model(
   assert(m_deviceName!=nullptr);
   m_regObjects[m_regObjNumb]=this;
   m_regObjNumb++;
+  m_pubEnabled=false;
 }
 
 void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer,unsigned int lowPer,unsigned int highPer){
@@ -56,6 +57,11 @@ void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqt
   
   connect();
 }
+
+void Hamqtt::startPublishing(){
+  m_pubEnabled=true;
+}
+
 
 void Hamqtt::connect() {
   
@@ -197,7 +203,8 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
 void Hamqtt::publishEntity(int index_of_entity, int index_of_item){
   StaticJsonBuffer<300> jsonBuffer;
   JsonObject& json = jsonBuffer.createObject(); 
-
+  if(!m_pubEnabled)
+    return;
   assert(m_enitiyDB[index_of_entity]->entNumber>index_of_item);
   switch(m_enitiyDB[index_of_entity]->vType){
     case VTYPE_INT:
@@ -228,29 +235,33 @@ void Hamqtt::publishEntity(int index_of_entity, int index_of_item){
 }
 
 
-void Hamqtt::publishValue(const char  * ent_name, const char * value){
+void Hamqtt::publishValue(const char  * ent_name, const char * value,bool onlyChange){
 
   for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
       assert(m_enitiyDB[i]->entNumber==1);
       assert(m_enitiyDB[i]->grStateTopic==false);      
-      m_enitiyDB[i]->value[0].s=value;
-      m_enitiyDB[i]->vType=VTYPE_STRING;
-      publishEntity(i,0);
+      if(!onlyChange || strcmp(m_enitiyDB[i]->value[0].s,value)!=0){
+        m_enitiyDB[i]->value[0].s=value;
+        m_enitiyDB[i]->vType=VTYPE_STRING;
+        publishEntity(i,0);
+      }  
       return;
     }
   }
   DEBUG_LOG0(true,"MQTT:publisValue:entity not found");
 }
 
-void Hamqtt::publishValue(const char  * ent_name, float value){
+void Hamqtt::publishValue(const char  * ent_name, float value,bool onlyChange){
   for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
       assert(m_enitiyDB[i]->entNumber==1);
       assert(m_enitiyDB[i]->grStateTopic==false);  
-      m_enitiyDB[i]->value[0].f=value;
-      m_enitiyDB[i]->vType=VTYPE_FLOAT;
-      publishEntity(i,0);
+      if(!onlyChange || m_enitiyDB[i]->value[0].f!=value){
+        m_enitiyDB[i]->value[0].f=value;
+        m_enitiyDB[i]->vType=VTYPE_FLOAT;
+        publishEntity(i,0);
+      }
       return;
     }
   }
@@ -312,47 +323,37 @@ void Hamqtt::main(){
   Client.loop();
   if(delTime >= m_DatasendNormalPer){
     m_datasend_normal_ltime = millis();
-    for(int objInd=0;objInd<m_regObjNumb;objInd++){
-      Hamqtt * objPtr=m_regObjects[objInd];
-      if(objPtr->m_grStateTopic && objPtr->m_grPerType==PERTYPE_NORMAL)
-        objPtr->publishGroupedEntities();
-      if(WiFi.status() == WL_CONNECTED){
-        if (!Client.connected())connect();
-        objPtr->publisValuesPer(PERTYPE_NORMAL);
-      }
-    }  
+    main_int(PERTYPE_NORMAL);
   }
 
   delTime = millis() - m_datasend_lowspeed_ltime;
   if(delTime >= m_DatasendLowPer){
     m_datasend_lowspeed_ltime = millis();
-    for(int objInd=0;objInd<m_regObjNumb;objInd++){
-      Hamqtt * objPtr=m_regObjects[objInd];   
-      if(objPtr->m_grStateTopic && objPtr->m_grPerType==PERTYPE_LOWSPEED)
-        objPtr->publishGroupedEntities();
-      if(WiFi.status() == WL_CONNECTED){
-        if (!Client.connected())connect();
-        objPtr->publisValuesPer(PERTYPE_LOWSPEED);
-      }
-    }  
+    main_int(PERTYPE_LOWSPEED);
   }
 
   delTime = millis() - m_datasend_highspeed_ltime;
   if(delTime >= m_DatasendHighPer){
     m_datasend_highspeed_ltime = millis();
-    for(int objInd=0;objInd<m_regObjNumb;objInd++){
-      Hamqtt * objPtr=m_regObjects[objInd];   
-      if(objPtr->m_grStateTopic && objPtr->m_grPerType==PERTYPE_HIGHSPEED)
-        objPtr->publishGroupedEntities();
-      if(WiFi.status() == WL_CONNECTED){
-        if (!Client.connected())connect();
-        objPtr->publisValuesPer(PERTYPE_HIGHSPEED);
-      }
-    }  
+    main_int(PERTYPE_HIGHSPEED);
   }
 } 
 
+void Hamqtt::main_int(PeriodType perType){
+  for(int objInd=0;objInd<m_regObjNumb;objInd++){
+    Hamqtt * objPtr=m_regObjects[objInd];   
+    if(objPtr->m_pubEnabled){
+      if(WiFi.status() == WL_CONNECTED){
+        if (!Client.connected())
+          connect();
+        if(objPtr->m_grStateTopic && objPtr->m_grPerType==perType)
+          objPtr->publishGroupedEntities();
 
+        objPtr->publisValuesPer(perType);
+      }
+    }
+  }
+}
 void Hamqtt::messageReceived(String &topic, String &payload){
   DEBUG_LOG0_NOF(true,"MQTT:messageReceived [" + topic + "] " + payload);
   for(int objInd=0;objInd<m_regObjNumb;objInd++){
