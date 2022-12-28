@@ -91,6 +91,9 @@ class Hamqtt{
      */
     void publishValue(const char * ent_name, const char * value,bool onlyChange=true);  
     void publishValue(const char * ent_name, float value,bool onlyChange=true);
+    void publishValue(const char * ent_name, uint32_t value,bool onlyChange=true);
+    void publishValue(const char * ent_name, bool value,bool onlyChange=true);
+
     /**
      * @brief write value - primary for grouped entity in one state topic, useable also for other entities
     */
@@ -142,14 +145,14 @@ class Hamqtt{
     static Hamqtt * m_regObjects[MAX_REG_OBJ];
     static int m_regObjNumb;
     union ValueType{
-      int i;
+      uint32_t u32;
       float f;
       const char * s;
     };
    
     enum VType{
         VTYPE_UNDEF,
-        VTYPE_INT,
+        VTYPE_UINT32,
         VTYPE_FLOAT,
         VTYPE_STRING
     };
@@ -182,6 +185,7 @@ class Hamqtt{
     void publishGroupedEntities();
     static void messageReceived(String &topic, String &payload);
     unsigned long getPeriod(int index_of_entity);
+    void publishValue_int(const char * ent_name, VType value_type, ValueType value,bool onlyChange=true);
     static WiFiClient * m_wifiClientPtr;
     static MQTTClient Client;  
     bool m_pubEnabled;

@@ -207,8 +207,8 @@ void Hamqtt::publishEntity(int index_of_entity, int index_of_item){
     return;
   assert(m_enitiyDB[index_of_entity]->entNumber>index_of_item);
   switch(m_enitiyDB[index_of_entity]->vType){
-    case VTYPE_INT:
-      json[m_enitiyDB[index_of_entity]->valueName + getIndexStr(index_of_entity,index_of_item)]=(int)m_enitiyDB[index_of_entity]->value[index_of_item].i;
+    case VTYPE_UINT32:
+      json[m_enitiyDB[index_of_entity]->valueName + getIndexStr(index_of_entity,index_of_item)]=(uint32_t)m_enitiyDB[index_of_entity]->value[index_of_item].u32;
       break;
     case VTYPE_FLOAT:
       json[m_enitiyDB[index_of_entity]->valueName+ getIndexStr(index_of_entity,index_of_item)]=(float)m_enitiyDB[index_of_entity]->value[index_of_item].f;
@@ -236,37 +236,68 @@ void Hamqtt::publishEntity(int index_of_entity, int index_of_item){
 
 
 void Hamqtt::publishValue(const char  * ent_name, const char * value,bool onlyChange){
-
-  for(int i=0;i<m_nrOFRegEnt;i++){
-    if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
-      assert(m_enitiyDB[i]->entNumber==1);
-      assert(m_enitiyDB[i]->grStateTopic==false);      
-      if(!onlyChange || strcmp(m_enitiyDB[i]->value[0].s,value)!=0){
-        m_enitiyDB[i]->value[0].s=value;
-        m_enitiyDB[i]->vType=VTYPE_STRING;
-        publishEntity(i,0);
-      }  
-      return;
-    }
-  }
-  DEBUG_LOG0(true,"MQTT:publisValue:entity not found");
+  ValueType value_;
+  value_.s=value;
+  publishValue_int(ent_name,VTYPE_STRING, value_,onlyChange);
 }
 
 void Hamqtt::publishValue(const char  * ent_name, float value,bool onlyChange){
-  for(int i=0;i<m_nrOFRegEnt;i++){
+  ValueType value_;
+  value_.f=value;  
+   publishValue_int(ent_name,VTYPE_FLOAT, value_,onlyChange);
+}
+
+void Hamqtt::publishValue(const char * ent_name, uint32_t value,bool onlyChange){
+  ValueType value_;
+  value_.u32=value;  
+   publishValue_int(ent_name,VTYPE_UINT32, value_,onlyChange);
+}
+void Hamqtt::publishValue(const char * ent_name, bool value,bool onlyChange){
+  ValueType value_;
+  value_.u32=value;  
+   publishValue_int(ent_name,VTYPE_UINT32, value_,onlyChange);
+}
+
+void Hamqtt::publishValue_int(const char * ent_name, VType value_type, ValueType value,bool onlyChange){
+ for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
       assert(m_enitiyDB[i]->entNumber==1);
-      assert(m_enitiyDB[i]->grStateTopic==false);  
-      if(!onlyChange || m_enitiyDB[i]->value[0].f!=value){
-        m_enitiyDB[i]->value[0].f=value;
-        m_enitiyDB[i]->vType=VTYPE_FLOAT;
+      assert(m_enitiyDB[i]->grStateTopic==false); 
+      bool changeValue=false;
+      switch(value_type){
+        case VTYPE_UINT32:
+          changeValue=m_enitiyDB[i]->value[0].u32!=value.u32;
+          break;
+        case VTYPE_FLOAT:
+          changeValue=m_enitiyDB[i]->value[0].f!=value.f;
+          break;
+        case VTYPE_STRING:
+          changeValue=strcmp(m_enitiyDB[i]->value[0].s,value.s)!=0;
+          break;
+      }
+      
+      if(!onlyChange || m_enitiyDB[i]->vType==VTYPE_UNDEF || changeValue){
+        switch(value_type){
+          case VTYPE_UINT32:
+              m_enitiyDB[i]->value[0]=value;
+              m_enitiyDB[i]->vType=VTYPE_UINT32;
+            break;
+          case VTYPE_FLOAT:
+              m_enitiyDB[i]->value[0]=value;
+              m_enitiyDB[i]->vType=VTYPE_FLOAT;
+            break;
+          case VTYPE_STRING:
+              m_enitiyDB[i]->value[0]=value;
+              m_enitiyDB[i]->vType=VTYPE_STRING;
+            break;
+        }
         publishEntity(i,0);
       }
       return;
     }
   }
-  DEBUG_LOG0(true,"MQTT:publisValue:entity not found");
 }
+
 /**
  * @brief publish value of entity, only entites which are not grouped in one topic
 */
@@ -286,8 +317,8 @@ void Hamqtt::publishGroupedEntities(){
     if(m_enitiyDB[i]->grStateTopic){
       for(int j=0;j<m_enitiyDB[i]->entNumber;j++){
         switch(m_enitiyDB[i]->vType){
-          case VTYPE_INT:
-            json[m_enitiyDB[i]->valueName + getIndexStr(i,j)]=(int)m_enitiyDB[i]->value[j].i;
+          case VTYPE_UINT32:
+            json[m_enitiyDB[i]->valueName + getIndexStr(i,j)]=(int)m_enitiyDB[i]->value[j].u32;
             break;
           case VTYPE_FLOAT:
             json[m_enitiyDB[i]->valueName+ getIndexStr(i,j)]=(float)m_enitiyDB[i]->value[j].f;
