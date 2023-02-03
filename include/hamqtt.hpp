@@ -71,10 +71,13 @@ class Hamqtt{
      * @param entity_category - (HACV)entity category
      * @param entNumber - number of entity items, if entity is multiple
      * @param grStTopic - all entities with set grStTopic=true are grouped into one state topic
+     * @param max - up limit of range
+    *  @param min - low limit of range
     */
     void registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,\
         const char * unit_of_measurement=nullptr,const char * unique_id=nullptr,const char * icon=nullptr,\
-        CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr, int entNumber=1,bool grStTopic=false);
+        CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr, int entNumber=1,bool grStTopic=false,\
+        float max=0, float min=0);
     /**
      * @brief registerSensorEntity - optimised registering function for sensor component type, see https://www.home-assistant.io/integrations/sensor.mqtt/
     */
@@ -84,7 +87,7 @@ class Hamqtt{
      * @brief registerBinarySensorEntity - optimised registering function for number component type, see https://www.home-assistant.io/integrations/number.mqtt/
     */
     void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,\
-        const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false);
+        const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false,float max=0, float min=0);
     /**
      * @brief write and publish value - only for simple and ungrouped entity
      * @param onlyCahnge - if true, value is published only if it is different from previous value 
@@ -175,6 +178,8 @@ class Hamqtt{
         const char * entity_category;
         int entNumber;
         bool grStateTopic;
+        float max;
+        float min;
     };
     static void main_int(PeriodType perType);
     static void connect();    

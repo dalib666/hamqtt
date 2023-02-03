@@ -78,11 +78,12 @@ void Hamqtt::connect() {
 void Hamqtt::registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,int entNumber,bool grStTopic){
   registerEntity("sensor",ent_name,perType,class_,unit_of_measurement,nullptr,icon,nullptr,"diagnostic",entNumber,grStTopic);
 }
-void Hamqtt::registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,CmdCallbackType cmdCallback,bool grStTopic){
+void Hamqtt::registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,CmdCallbackType cmdCallback,bool grStTopic,float max, float min){
   registerEntity("number",ent_name,perType,class_,unit_of_measurement,nullptr,icon,cmdCallback,"config",1,grStTopic);
 }
 
-void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt::PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id,const char * icon,CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grStTopic){
+void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt::PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id,const char * icon,\
+CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grStTopic,float max, float min){
   assert(m_nrOFRegEnt<MAX_REG_ENT);
  
   m_enitiyDB[m_nrOFRegEnt]=new EntityConfData[1];
@@ -98,6 +99,9 @@ void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt
   m_enitiyDB[m_nrOFRegEnt]->component = component;
   m_enitiyDB[m_nrOFRegEnt]->entity_category=entity_category;
   m_enitiyDB[m_nrOFRegEnt]->value=new ValueType[entNumber];
+  m_enitiyDB[m_nrOFRegEnt]->max=max;
+  m_enitiyDB[m_nrOFRegEnt]->min=min;
+
   assert(m_enitiyDB[m_nrOFRegEnt]->value != nullptr);
   if(grStTopic){
     m_grStateTopic=true;
@@ -185,6 +189,12 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
   json["expire_after"]=getPeriod(index_of_entity) * m_expire_after/1000;
   if(m_enitiyDB[index_of_entity]->icon != nullptr)
     json["icon"]=m_enitiyDB[index_of_entity]->icon;
+
+  if(m_enitiyDB[index_of_entity]->max !=m_enitiyDB[index_of_entity]->min){
+    json["max"]=m_enitiyDB[index_of_entity]->max;
+    json["min"]=m_enitiyDB[index_of_entity]->min;
+  }
+  
   if(m_enitiyDB[index_of_entity]->entity_category != nullptr)
     json["entity_category"]=m_enitiyDB[index_of_entity]->entity_category;
   String confTopic = (String)DISCOVERY_PREFIX+(String)"/"+(String)m_enitiyDB[index_of_entity]->component+ String("/") +String(m_enitiyDB[index_of_entity]->object_id)+getIndexStr(index_of_entity,index_of_item) +"/config";
