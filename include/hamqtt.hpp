@@ -84,10 +84,16 @@ class Hamqtt{
     void registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,\
         const char * icon=nullptr, int entNumber=1,bool grStTopic=false);	
     /**
-     * @brief registerBinarySensorEntity - optimised registering function for number component type, see https://www.home-assistant.io/integrations/number.mqtt/
+     * @brief registerNumberEntity - optimised registering function for number component type, see https://www.home-assistant.io/integrations/number.mqtt/
     */
     void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,\
         const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false,float max=0, float min=0);
+
+    /**
+     * @brief registerSwitchEntity - optimised registering function for Switch component type, see https://www.home-assistant.io/integrations/switch.mqtt/
+    */
+    void registerSwitchEntity(const char * ent_name,PeriodType perType, const char * class_,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false);
+
     /**
      * @brief write and publish value - only for simple and ungrouped entity
      * @param onlyCahnge - if true, value is published only if it is different from previous value 
@@ -96,6 +102,7 @@ class Hamqtt{
     void publishValue(const char * ent_name, float value,bool onlyChange=true);
     void publishValue(const char * ent_name, uint32_t value,bool onlyChange=true);
     void publishValue(const char * ent_name, bool value,bool onlyChange=true);
+    void publishSwitch(const char * ent_name, bool value,bool onlyChange=true);
 
     /**
      * @brief write value - primary for grouped entity in one state topic, useable also for other entities
@@ -109,6 +116,11 @@ class Hamqtt{
     * @brief startPublishing - start publishing data to MQTT broker, i would be called after all entities are set to valid values.
    */
     void startPublishing();
+    /**
+    * @brief lastTimeOfHAact - last time of HA activity, useable only for enities using command topic.
+    * @return  [ms], time of last command from HA, Use time 32 bits counter, so after reach the max value counter overflows !
+    */
+    unsigned long lastTimeOfAct();
 
     static void main();
     
@@ -144,7 +156,7 @@ class Hamqtt{
     String m_grStateTopicFull;
     bool m_grStateTopic;
     PeriodType    m_grPerType;
-
+    unsigned long   m_lastTimeOfAct;
     static Hamqtt * m_regObjects[MAX_REG_OBJ];
     static int m_regObjNumb;
     union ValueType{

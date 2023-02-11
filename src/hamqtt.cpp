@@ -82,6 +82,12 @@ void Hamqtt::registerNumberEntity(const char * ent_name,PeriodType perType, cons
   registerEntity("number",ent_name,perType,class_,unit_of_measurement,nullptr,icon,cmdCallback,"config",1,grStTopic);
 }
 
+void Hamqtt::registerSwitchEntity(const char * ent_name,PeriodType perType, const char * class_,const char * icon,CmdCallbackType cmdCallback,bool grStTopic){
+  registerEntity("switch",ent_name,perType,class_,nullptr,nullptr,icon,cmdCallback,"config",1,grStTopic);
+}
+
+
+
 void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt::PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id,const char * icon,\
 CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grStTopic,float max, float min){
   assert(m_nrOFRegEnt<MAX_REG_ENT);
@@ -103,6 +109,11 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
   m_enitiyDB[m_nrOFRegEnt]->min=min;
 
   assert(m_enitiyDB[m_nrOFRegEnt]->value != nullptr);
+  if(strcmp(m_enitiyDB[m_nrOFRegEnt]->component,"switch")==0){
+    for(int ind=0;ind<entNumber;ind++)
+      m_enitiyDB[m_nrOFRegEnt]->value[ind].s="";
+  }
+
   if(grStTopic){
     m_grStateTopic=true;
     if(m_grStateTopicFull.isEmpty())
@@ -113,7 +124,8 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
     m_enitiyDB[m_nrOFRegEnt]->stateTopicFull= (String)DISCOVERY_PREFIX+(String)"/"+ (String)m_enitiyDB[m_nrOFRegEnt]->component + (String)"/"+String(m_deviceName) + String(m_devIndex)+(String)"/" + String(m_enitiyDB[m_nrOFRegEnt]->ent_name) + (String)"/state"; //set topic individual for entity
 
   m_enitiyDB[m_nrOFRegEnt]->object_id=String(m_deviceName) + String(m_devIndex) + String("-") +String(ent_name);
-  if(strcmp(component,"number")==0){
+  if((strcmp(component,"number")==0)||\
+    (strcmp(component,"switch")==0)){
     m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull=String(DISCOVERY_PREFIX) + String("/") +  String(m_enitiyDB[m_nrOFRegEnt]->component) + String("/") +String(m_deviceName) + String(m_devIndex)+  String("/set");
   }
     
@@ -268,6 +280,14 @@ void Hamqtt::publishValue(const char * ent_name, bool value,bool onlyChange){
    publishValue_int(ent_name,VTYPE_UINT32, value_,onlyChange);
 }
 
+void Hamqtt::publishSwitch(const char * ent_name, bool value,bool onlyChange){
+  ValueType value_;
+  value_.s= value? "ON":"OFF";
+  publishValue_int(ent_name,VTYPE_STRING, value_,onlyChange);
+}
+
+
+
 void Hamqtt::publishValue_int(const char * ent_name, VType value_type, ValueType value,bool onlyChange){
  for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
@@ -358,6 +378,10 @@ void Hamqtt::publishGroupedEntities(){
 }
 
 
+unsigned long Hamqtt::lastTimeOfAct(){
+  return m_lastTimeOfAct;
+}
+
 void Hamqtt::main(){
   unsigned long delTime=0;  
   delTime = millis() - m_datasend_normal_ltime;  
@@ -402,6 +426,7 @@ void Hamqtt::messageReceived(String &topic, String &payload){
     Hamqtt * objPtr=m_regObjects[objInd];
     for(int i=0;i<objPtr->m_nrOFRegEnt;i++){
       if(objPtr->m_enitiyDB[i]->cmdTopicFull==topic){
+        objPtr->m_lastTimeOfAct=millis();
         if(objPtr->m_enitiyDB[i]->cmdCallback!=nullptr){
           objPtr->m_enitiyDB[i]->cmdCallback(i,payload);
         }
@@ -424,6 +449,7 @@ unsigned long Hamqtt::getPeriod(int index_of_entity){
   assert(false);
   return 0;
 }
+
 
 void Hamqtt::writeValue(const char * ent_name, const char * value,int item){
   for(int i=0;i<m_nrOFRegEnt;i++){
