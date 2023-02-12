@@ -17,6 +17,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <MQTTClient.h>
+#include <CircularBuffer.h>
 
 class Hamqtt{
 
@@ -26,6 +27,7 @@ class Hamqtt{
         PERTYPE_NORMAL,
         PERTYPE_LOWSPEED,
         PERTYPE_HIGHSPEED,
+        PERTYPE_NO_PERIOD   //for only event transmission
     }; 
     typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
     /**
@@ -122,6 +124,7 @@ class Hamqtt{
     */
     unsigned long lastTimeOfAct();
 
+    const char *getEntName(int indexOfEnt);
     static void main();
     
     private:
@@ -159,6 +162,11 @@ class Hamqtt{
     unsigned long   m_lastTimeOfAct;
     static Hamqtt * m_regObjects[MAX_REG_OBJ];
     static int m_regObjNumb;
+    struct BuffElemnet{
+        String topic;
+        String payload;
+    };
+    static CircularBuffer<BuffElemnet *,5> m_buffer;
     union ValueType{
       uint32_t u32;
       float f;
@@ -193,6 +201,7 @@ class Hamqtt{
         float max;
         float min;
     };
+    static void process_callback();
     static void main_int(PeriodType perType);
     static void connect();    
     EntityConfData * m_enitiyDB[MAX_REG_ENT];

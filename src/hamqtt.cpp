@@ -15,7 +15,7 @@
 
 #define getIndexStr(entIndex,itemIndex) ((m_enitiyDB[entIndex]->entNumber==1)? "":String(itemIndex))
 
-
+CircularBuffer<Hamqtt::BuffElemnet *,5>  Hamqtt::m_buffer;
 MQTTClient Hamqtt::Client(768);
   unsigned long Hamqtt::m_DatasendNormalPer;
   unsigned long Hamqtt::m_DatasendLowPer;
@@ -383,6 +383,7 @@ unsigned long Hamqtt::lastTimeOfAct(){
 }
 
 void Hamqtt::main(){
+  process_callback();
   unsigned long delTime=0;  
   delTime = millis() - m_datasend_normal_ltime;  
   Client.loop();
@@ -420,19 +421,43 @@ void Hamqtt::main_int(PeriodType perType){
   }
 }
 void Hamqtt::messageReceived(String &topic, String &payload){
-  DEBUG_LOG0_NOF(true,"MQTT:messageReceived [" + topic + "] " + payload);
+  //DEBUG_LOG0_NOF(true,"MQTT:messageReceived [" + topic + "] " + payload);
+  BuffElemnet * elemPtr;
+
+  if(m_buffer.isFull()){
+    elemPtr=m_buffer.pop();
+    delete elemPtr;
+  }
+  elemPtr=new BuffElemnet;
+  assert(elemPtr!=nullptr);
+  elemPtr->topic=topic;
+  elemPtr->payload=payload;  
+  m_buffer.push(elemPtr);
+}
+
+void Hamqtt::process_callback(){
+  noInterrupts();
+  if(m_buffer.isEmpty()){
+    interrupts();
+    return;
+  }
+  BuffElemnet * elemPtr;
+  elemPtr = m_buffer.pop();
+  interrupts();
+  assert(elemPtr !=nullptr);
   for(int objInd=0;objInd<m_regObjNumb;objInd++){
     assert(m_regObjects[objInd]!=nullptr);
     Hamqtt * objPtr=m_regObjects[objInd];
     for(int i=0;i<objPtr->m_nrOFRegEnt;i++){
-      if(objPtr->m_enitiyDB[i]->cmdTopicFull==topic){
+      if(objPtr->m_enitiyDB[i]->cmdTopicFull==elemPtr->topic){
         objPtr->m_lastTimeOfAct=millis();
         if(objPtr->m_enitiyDB[i]->cmdCallback!=nullptr){
-          objPtr->m_enitiyDB[i]->cmdCallback(i,payload);
+          objPtr->m_enitiyDB[i]->cmdCallback(i,elemPtr->payload);
         }
       }
     }
   }  
+  delete elemPtr;
 }
 
 unsigned long Hamqtt::getPeriod(int index_of_entity){
@@ -444,6 +469,8 @@ unsigned long Hamqtt::getPeriod(int index_of_entity){
       return m_DatasendLowPer;
     case PERTYPE_HIGHSPEED:
       return m_DatasendHighPer;
+    case PERTYPE_NO_PERIOD:
+      return 0;
   }
 
   assert(false);
@@ -472,4 +499,9 @@ void Hamqtt::writeValue(const char * ent_name, float value,int item){
     }
   }
   assert(false);
+}
+
+const char *Hamqtt::getEntName(int indexOfEnt){
+  assert((indexOfEnt < m_nrOFRegEnt) && (indexOfEnt >= 0));  
+  return m_enitiyDB[indexOfEnt]->ent_name;
 }
