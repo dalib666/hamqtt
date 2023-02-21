@@ -126,7 +126,7 @@ class Hamqtt{
 
     const char *getEntName(int indexOfEnt);
     static void main();
-    
+
     private:
     
      //constant parameters
@@ -203,7 +203,7 @@ class Hamqtt{
     };
     static void process_callback();
     static void main_int(PeriodType perType);
-    static void connect();    
+    static void connect(bool recon=false);    
     EntityConfData * m_enitiyDB[MAX_REG_ENT];
     void publisValuesPer(PeriodType period);  
     void publishEntity(int index_of_entity, int index_of_item);  

@@ -63,11 +63,21 @@ void Hamqtt::startPublishing(){
 }
 
 
-void Hamqtt::connect() {
+void Hamqtt::connect(bool recon) {
   
-  DEBUG_LOG0(true,"Mqtt: nconnecting to broker...");    
+  DEBUG_LOG0(true,"Mqtt: connecting to broker...");    
   if(Client.connect(m_clientID,m_mqttUserName,m_mqttPass)){
     DEBUG_LOG0(true,"\n connected!");
+    if(recon){
+      for(int objInd=0;objInd<m_regObjNumb;objInd++){
+        Hamqtt * objPtr=m_regObjects[objInd];   
+        for(int i=0;i<objPtr->m_nrOFRegEnt;i++){
+          if(objPtr->m_enitiyDB[objPtr->m_nrOFRegEnt]->cmdTopicFull != nullptr){
+            Client.subscribe(objPtr->m_enitiyDB[objPtr->m_nrOFRegEnt]->cmdTopicFull);
+          }
+        }
+      }      
+    }  
   }
   else{
     DEBUG_LOG0(true,"\n not connected!");
@@ -411,7 +421,7 @@ void Hamqtt::main_int(PeriodType perType){
     if(objPtr->m_pubEnabled){
       if(WiFi.status() == WL_CONNECTED){
         if (!Client.connected())
-          connect();
+          connect(true);
         if(objPtr->m_grStateTopic && objPtr->m_grPerType==perType)
           objPtr->publishGroupedEntities();
 
@@ -421,7 +431,7 @@ void Hamqtt::main_int(PeriodType perType){
   }
 }
 void Hamqtt::messageReceived(String &topic, String &payload){
-  //DEBUG_LOG0_NOF(true,"MQTT:messageReceived [" + topic + "] " + payload);
+  DEBUG_LOG0_NOF(true,"MQTT:messageReceived [" + topic + "] " + payload);
   BuffElemnet * elemPtr;
 
   if(m_buffer.isFull()){
