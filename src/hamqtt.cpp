@@ -67,12 +67,16 @@ void Hamqtt::connect(bool recon) {
   
   DEBUG_LOG0(true,"Mqtt: connecting to broker...");    
   if(Client.connect(m_clientID,m_mqttUserName,m_mqttPass)){
-    DEBUG_LOG0(true,"\n connected!");
+    DEBUG_LOG0(true,"connected! \n");
     if(recon){
       for(int objInd=0;objInd<m_regObjNumb;objInd++){
         Hamqtt * objPtr=m_regObjects[objInd];   
         for(int i=0;i<objPtr->m_nrOFRegEnt;i++){
-          if(objPtr->m_enitiyDB[objPtr->m_nrOFRegEnt]->cmdTopicFull != nullptr){
+          if(!objPtr->m_enitiyDB[objPtr->m_nrOFRegEnt]->cmdTopicFull.isEmpty()){
+            DEBUG_LOG0(true,"subscribing :");
+            DEBUG_LOG0_NOF(true,objPtr->m_enitiyDB[objPtr->m_nrOFRegEnt]->cmdTopicFull);
+            DEBUG_LOG0(true,"\n");
+            delay(10);
             Client.subscribe(objPtr->m_enitiyDB[objPtr->m_nrOFRegEnt]->cmdTopicFull);
           }
         }
@@ -117,6 +121,7 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
   m_enitiyDB[m_nrOFRegEnt]->value=new ValueType[entNumber];
   m_enitiyDB[m_nrOFRegEnt]->max=max;
   m_enitiyDB[m_nrOFRegEnt]->min=min;
+  m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull.clear();
 
   assert(m_enitiyDB[m_nrOFRegEnt]->value != nullptr);
   if(strcmp(m_enitiyDB[m_nrOFRegEnt]->component,"switch")==0){
@@ -149,7 +154,7 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
   DEBUG_LOG0_NOF(true,m_enitiyDB[m_nrOFRegEnt]->valueName);
   delay(100);
   assert(m_enitiyDB[m_nrOFRegEnt]->valueName.length()<MAX_VALUE_NAME_LEN);
-  if(m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull != nullptr){
+  if(!m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull.isEmpty()){
     Client.subscribe(m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull);
   }
   for(int i=0;i<m_enitiyDB[m_nrOFRegEnt]->entNumber;i++){
@@ -191,7 +196,7 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
     device["via_device"]=m_via_device;
 
 
-  if(m_enitiyDB[index_of_entity]->cmdTopicFull!=nullptr){
+  if(!m_enitiyDB[index_of_entity]->cmdTopicFull.isEmpty()){
     assert(m_enitiyDB[index_of_entity]->entNumber==1);
     json["command_topic"]=m_enitiyDB[index_of_entity]->cmdTopicFull; 
   }
@@ -397,6 +402,7 @@ void Hamqtt::main(){
   unsigned long delTime=0;  
   delTime = millis() - m_datasend_normal_ltime;  
   Client.loop();
+  delay(10);
   if(delTime >= m_DatasendNormalPer){
     m_datasend_normal_ltime = millis();
     main_int(PERTYPE_NORMAL);
@@ -510,6 +516,32 @@ void Hamqtt::writeValue(const char * ent_name, float value,int item){
   }
   assert(false);
 }
+
+
+void Hamqtt::writeSwitch(const char * ent_name, bool value,int item){
+  for(int i=0;i<m_nrOFRegEnt;i++){
+    if(m_enitiyDB[i]->ent_name==ent_name){
+      m_enitiyDB[i]->vType=VTYPE_STRING;
+      assert(m_enitiyDB[i]->entNumber>item);
+      m_enitiyDB[i]->value[item].s=value? "ON":"OFF";;
+      return;
+    }
+  }
+  assert(false);
+}
+void Hamqtt::writeValue(const char * ent_name, uint32_t value,int item){
+  for(int i=0;i<m_nrOFRegEnt;i++){
+    if(m_enitiyDB[i]->ent_name==ent_name){
+      m_enitiyDB[i]->vType=VTYPE_UINT32;
+      assert(m_enitiyDB[i]->entNumber>item);
+      m_enitiyDB[i]->value[item].u32=value;
+      return;
+    }
+  }
+  assert(false);
+}
+
+
 
 const char *Hamqtt::getEntName(int indexOfEnt){
   assert((indexOfEnt < m_nrOFRegEnt) && (indexOfEnt >= 0));  

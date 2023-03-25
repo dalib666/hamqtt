@@ -111,6 +111,8 @@ class Hamqtt{
     */
     void writeValue(const char * ent_name, const char * value,int item=0);  
     void writeValue(const char * ent_name, float value,int item=0);
+    void writeSwitch(const char * ent_name, bool value,int item=0);
+    void writeValue(const char * ent_name, uint32_t value,int item=0);
     /**
      * @brief main - main function, must be called in loop()
     */
