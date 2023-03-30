@@ -16,21 +16,20 @@
 #define getIndexStr(entIndex,itemIndex) ((m_enitiyDB[entIndex]->entNumber==1)? "":String(itemIndex))
 
 CircularBuffer<Hamqtt::BuffElemnet *,5>  Hamqtt::m_buffer;
-MQTTClient Hamqtt::Client(768);
+PubSubClient Hamqtt::MQTTClient;
   unsigned long Hamqtt::m_DatasendNormalPer;
   unsigned long Hamqtt::m_DatasendLowPer;
   unsigned long Hamqtt::m_DatasendHighPer;
   const char * Hamqtt::m_mqttUserName;
   const char * Hamqtt::m_mqttPass;
   const char * Hamqtt::m_clientID; 
-  WiFiClient * Hamqtt::m_wifiClientPtr;
   int Hamqtt::m_regObjNumb;
   Hamqtt * Hamqtt::m_regObjects[];
   unsigned long Hamqtt::m_datasend_normal_ltime=0;
   unsigned long Hamqtt::m_datasend_lowspeed_ltime=0;
   unsigned long Hamqtt::m_datasend_highspeed_ltime=0;
   const char *  Hamqtt::DISCOVERY_PREFIX="homeassistant";
- 
+  unsigned long Hamqtt::m_lastConnectAttemp;
 //static EntityConfData * Hamqtt::m_enitiyDB[MAX_REG_ENT]; 
 Hamqtt::Hamqtt(const char * devName,const char *  devIndex, PeriodType grPerType, const char * model, const char * manufacturer, const char * swVersion, const char * identifiers, const char * configuration_url, const char * hw_version, const char * via_device, int expire_after):\
 m_devIndex(devIndex),m_expire_after(expire_after),m_deviceName(devName),m_model(model),m_manufacturer(manufacturer),m_swVersion(swVersion),m_identifiers(identifiers),m_configuration_url(configuration_url),m_hw_version(hw_version),m_via_device(via_device),m_grPerType(grPerType){
@@ -42,12 +41,16 @@ m_devIndex(devIndex),m_expire_after(expire_after),m_deviceName(devName),m_model(
   m_regObjects[m_regObjNumb]=this;
   m_regObjNumb++;
   m_pubEnabled=false;
+  m_lastConnectAttemp=0;
 }
 
 void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer,unsigned int lowPer,unsigned int highPer){
-  Client.begin(brokerIP, *wifiClient);
-  Client.onMessage(messageReceived);
-  m_wifiClientPtr=wifiClient;
+  
+  MQTTClient.setBufferSize(768);
+  MQTTClient.setClient(*wifiClient);
+  MQTTClient.setServer(*brokerIP,1883);
+  MQTTClient.setCallback(messageReceived);
+  
   m_mqttUserName=mqttUserName;
   m_mqttPass=mqttPass;
   m_clientID=clientID;
@@ -64,26 +67,25 @@ void Hamqtt::startPublishing(){
 
 
 void Hamqtt::connect(bool recon) {
-  
+  if((millis() - m_lastConnectAttemp) < 3000)
+    return; 
   DEBUG_LOG0(true,"Mqtt: connecting to broker...");    
-  if(Client.connect(m_clientID,m_mqttUserName,m_mqttPass)){
+  if(MQTTClient.connect(m_clientID,m_mqttUserName,m_mqttPass)){
     DEBUG_LOG0(true,"connected! \n");
+           
     if(recon){
       for(int objInd=0;objInd<m_regObjNumb;objInd++){
         Hamqtt * objPtr=m_regObjects[objInd];   
         for(int i=0;i<objPtr->m_nrOFRegEnt;i++){
-          if(!objPtr->m_enitiyDB[objPtr->m_nrOFRegEnt]->cmdTopicFull.isEmpty()){
-            DEBUG_LOG0(true,"subscribing :");
-            DEBUG_LOG0_NOF(true,objPtr->m_enitiyDB[objPtr->m_nrOFRegEnt]->cmdTopicFull);
-            DEBUG_LOG0(true,"\n");
-            delay(10);
-            Client.subscribe(objPtr->m_enitiyDB[objPtr->m_nrOFRegEnt]->cmdTopicFull);
+          if(!objPtr->m_enitiyDB[i]->cmdTopicFull.isEmpty()){
+            MQTTClient.subscribe(objPtr->m_enitiyDB[i]->cmdTopicFull.c_str());
           }
         }
       }      
-    }  
+    } 
   }
   else{
+    m_lastConnectAttemp=millis();
     DEBUG_LOG0(true,"\n not connected!");
   }
 }
@@ -155,11 +157,11 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
   delay(100);
   assert(m_enitiyDB[m_nrOFRegEnt]->valueName.length()<MAX_VALUE_NAME_LEN);
   if(!m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull.isEmpty()){
-    Client.subscribe(m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull);
+    MQTTClient.subscribe(m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull.c_str());
   }
-  for(int i=0;i<m_enitiyDB[m_nrOFRegEnt]->entNumber;i++){
+  /* @TEMP for(int i=0;i<m_enitiyDB[m_nrOFRegEnt]->entNumber;i++){
     publishConfOfEntity(m_nrOFRegEnt,i);
-  }
+  }*/
   m_nrOFRegEnt++;
 }
 
@@ -229,9 +231,9 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
     String str_buf;
     json.prettyPrintTo(str_buf);
     DEBUG_LOG0_NOF(true,str_buf);
-    bool pubStatus = Client.publish(confTopic,str_buf ,true,1);
+    bool pubStatus = MQTTClient.publish(confTopic.c_str(),str_buf.c_str(),true);
     DEBUG_LOG0(pubStatus,"MQTT:published config");
-    DEBUG_LOG(!pubStatus,"MQTT:not published config !!! error=",Client.lastError()); 
+    //DEBUG_LOG(!pubStatus,"MQTT:not published config !!! error=",MQTTClient.lastError()); 
   }
 }
 
@@ -264,7 +266,7 @@ void Hamqtt::publishEntity(int index_of_entity, int index_of_item){
     DEBUG_LOG0(true,"MQTT:published data");
     String str_buf;
     json.prettyPrintTo(str_buf);
-    Client.publish(m_enitiyDB[index_of_entity]->stateTopicFull,str_buf ,true,1);
+    MQTTClient.publish(m_enitiyDB[index_of_entity]->stateTopicFull.c_str(),str_buf.c_str() ,false);
     DEBUG_LOG0_NOF(true,str_buf);
   }else{  
     DEBUG_LOG0(!json.success(),"MQTT:publish error");
@@ -304,7 +306,8 @@ void Hamqtt::publishSwitch(const char * ent_name, bool value,bool onlyChange){
 
 
 void Hamqtt::publishValue_int(const char * ent_name, VType value_type, ValueType value,bool onlyChange){
- for(int i=0;i<m_nrOFRegEnt;i++){
+  assert(value_type != VTYPE_UNDEF);
+  for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
       assert(m_enitiyDB[i]->entNumber==1);
       assert(m_enitiyDB[i]->grStateTopic==false); 
@@ -318,6 +321,9 @@ void Hamqtt::publishValue_int(const char * ent_name, VType value_type, ValueType
           break;
         case VTYPE_STRING:
           changeValue=strcmp(m_enitiyDB[i]->value[0].s,value.s)!=0;
+          break;
+        case  VTYPE_UNDEF:
+
           break;
       }
       
@@ -335,6 +341,10 @@ void Hamqtt::publishValue_int(const char * ent_name, VType value_type, ValueType
               m_enitiyDB[i]->value[0]=value;
               m_enitiyDB[i]->vType=VTYPE_STRING;
             break;
+
+          case  VTYPE_UNDEF:
+
+          break;  
         }
         publishEntity(i,0);
       }
@@ -384,7 +394,7 @@ void Hamqtt::publishGroupedEntities(){
     DEBUG_LOG0(true,"MQTT:published data");
     String str_buf;
     json.prettyPrintTo(str_buf);
-    bool pubStatus=Client.publish(m_grStateTopicFull,str_buf ,true,1);
+    bool pubStatus=MQTTClient.publish(m_grStateTopicFull.c_str(),str_buf.c_str() ,false);
     assert(pubStatus);
     DEBUG_LOG0_NOF(true,str_buf);
   }else{  
@@ -401,8 +411,8 @@ void Hamqtt::main(){
   process_callback();
   unsigned long delTime=0;  
   delTime = millis() - m_datasend_normal_ltime;  
-  Client.loop();
-  delay(10);
+  MQTTClient.loop();
+  //delay(10);
   if(delTime >= m_DatasendNormalPer){
     m_datasend_normal_ltime = millis();
     main_int(PERTYPE_NORMAL);
@@ -419,6 +429,7 @@ void Hamqtt::main(){
     m_datasend_highspeed_ltime = millis();
     main_int(PERTYPE_HIGHSPEED);
   }
+  
 } 
 
 void Hamqtt::main_int(PeriodType perType){
@@ -426,18 +437,21 @@ void Hamqtt::main_int(PeriodType perType){
     Hamqtt * objPtr=m_regObjects[objInd];   
     if(objPtr->m_pubEnabled){
       if(WiFi.status() == WL_CONNECTED){
-        if (!Client.connected())
+        if (!MQTTClient.connected())
           connect(true);
-        if(objPtr->m_grStateTopic && objPtr->m_grPerType==perType)
-          objPtr->publishGroupedEntities();
+        if(MQTTClient.connected()){
+          if(objPtr->m_grStateTopic && objPtr->m_grPerType==perType)
+            objPtr->publishGroupedEntities();
 
-        objPtr->publisValuesPer(perType);
+          objPtr->publisValuesPer(perType);
+        }  
       }
     }
   }
 }
-void Hamqtt::messageReceived(String &topic, String &payload){
-  DEBUG_LOG0_NOF(true,"MQTT:messageReceived [" + topic + "] " + payload);
+
+void Hamqtt::messageReceived(char *topic, byte*payload,unsigned int length){
+  DEBUG_LOG0_NOF(true,"MQTT:messageReceived [" + (String)topic + (String)"]"); // + payload);
   BuffElemnet * elemPtr;
 
   if(m_buffer.isFull()){
@@ -447,7 +461,13 @@ void Hamqtt::messageReceived(String &topic, String &payload){
   elemPtr=new BuffElemnet;
   assert(elemPtr!=nullptr);
   elemPtr->topic=topic;
-  elemPtr->payload=payload;  
+  char * tmpBuf=new char[length+1];
+  assert(tmpBuf!=nullptr);
+  assert(sizeof(byte)==sizeof(char)); // "code assumes same size of both data types and not testable in constant expression.
+  memcpy(tmpBuf,(char *)payload, length);
+  tmpBuf[length]=0;
+  elemPtr->payload=tmpBuf;  
+  delete tmpBuf;
   m_buffer.push(elemPtr);
 }
 

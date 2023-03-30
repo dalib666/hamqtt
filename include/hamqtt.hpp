@@ -16,7 +16,7 @@
 #define HAMQTT_HPP
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
-#include <MQTTClient.h>
+#include <PubSubClient.h>
 #include <CircularBuffer.h>
 
 class Hamqtt{
@@ -211,11 +211,11 @@ class Hamqtt{
     void publishEntity(int index_of_entity, int index_of_item);  
     void publishConfOfEntity(int index_of_entity, int index_of_item);
     void publishGroupedEntities();
-    static void messageReceived(String &topic, String &payload);
+    static void messageReceived(char *topic, byte*payload,unsigned int length);
     unsigned long getPeriod(int index_of_entity);
     void publishValue_int(const char * ent_name, VType value_type, ValueType value,bool onlyChange=true);
-    static WiFiClient * m_wifiClientPtr;
-    static MQTTClient Client;  
+    static PubSubClient MQTTClient;  
     bool m_pubEnabled;
+    static unsigned long m_lastConnectAttemp;
 };
 #endif //HAMQTT_HPP
