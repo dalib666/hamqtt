@@ -1,6 +1,6 @@
 {
     "name": "hamqtt",
-    "version": "1.3.2",
+    "version": "1.3.3",
     "description": "Simplifies implementing of MQTT communication into Home Assistatnt. Supports also discovery functionality.",
     "keywords": "Home Assistant, MQTT, discovery",
     "repository":
