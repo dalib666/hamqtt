@@ -159,15 +159,15 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
   if(!m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull.isEmpty()){
     MQTTClient.subscribe(m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull.c_str());
   }
-  /* @TEMP for(int i=0;i<m_enitiyDB[m_nrOFRegEnt]->entNumber;i++){
+  for(int i=0;i<m_enitiyDB[m_nrOFRegEnt]->entNumber;i++){
     publishConfOfEntity(m_nrOFRegEnt,i);
-  }*/
+  }
   m_nrOFRegEnt++;
 }
 
 void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
-  StaticJsonBuffer<1500> jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();  
+  StaticJsonBuffer<1500> * jsonBuffer = new StaticJsonBuffer<1500>;
+  JsonObject& json = jsonBuffer->createObject();  
 
   DEBUG_LOG(true,"publishConfOfEntity: index_of_item=",index_of_item);  
   json["name"]=String(m_enitiyDB[index_of_entity]->ent_name)+getIndexStr(index_of_entity,index_of_item);
@@ -235,6 +235,8 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
     DEBUG_LOG0(pubStatus,"MQTT:published config");
     //DEBUG_LOG(!pubStatus,"MQTT:not published config !!! error=",MQTTClient.lastError()); 
   }
+
+  delete jsonBuffer;
 }
 
 
