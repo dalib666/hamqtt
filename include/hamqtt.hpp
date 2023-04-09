@@ -126,6 +126,14 @@ class Hamqtt{
     */
     unsigned long lastTimeOfAct();
 
+    /**
+     * @brief Returns last time of connection into MQTT broker
+     */
+    unsigned long connected(){
+
+        return Hamqtt::m_connected_time;
+    }    
+
     const char *getEntName(int indexOfEnt);
     static void main();
 
@@ -217,5 +225,6 @@ class Hamqtt{
     static PubSubClient MQTTClient;  
     bool m_pubEnabled;
     static unsigned long m_lastConnectAttemp;
+    static unsigned long m_connected_time;
 };
 #endif //HAMQTT_HPP

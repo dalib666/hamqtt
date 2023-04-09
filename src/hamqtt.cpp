@@ -30,6 +30,7 @@ PubSubClient Hamqtt::MQTTClient;
   unsigned long Hamqtt::m_datasend_highspeed_ltime=0;
   const char *  Hamqtt::DISCOVERY_PREFIX="homeassistant";
   unsigned long Hamqtt::m_lastConnectAttemp;
+  unsigned long Hamqtt::m_connected_time;
 //static EntityConfData * Hamqtt::m_enitiyDB[MAX_REG_ENT]; 
 Hamqtt::Hamqtt(const char * devName,const char *  devIndex, PeriodType grPerType, const char * model, const char * manufacturer, const char * swVersion, const char * identifiers, const char * configuration_url, const char * hw_version, const char * via_device, int expire_after):\
 m_devIndex(devIndex),m_expire_after(expire_after),m_deviceName(devName),m_model(model),m_manufacturer(manufacturer),m_swVersion(swVersion),m_identifiers(identifiers),m_configuration_url(configuration_url),m_hw_version(hw_version),m_via_device(via_device),m_grPerType(grPerType){
@@ -57,7 +58,7 @@ void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqt
   m_DatasendNormalPer=normalPer;
   m_DatasendLowPer=lowPer;
   m_DatasendHighPer=highPer;
-  
+  m_connected_time=0;
   connect();
 }
 
@@ -442,6 +443,7 @@ void Hamqtt::main_int(PeriodType perType){
         if (!MQTTClient.connected())
           connect(true);
         if(MQTTClient.connected()){
+          m_connected_time=millis();
           if(objPtr->m_grStateTopic && objPtr->m_grPerType==perType)
             objPtr->publishGroupedEntities();
 
