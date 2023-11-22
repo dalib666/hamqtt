@@ -103,6 +103,10 @@ void Hamqtt::registerSwitchEntity(const char * ent_name,PeriodType perType, cons
   registerEntity("switch",ent_name,perType,class_,nullptr,nullptr,icon,cmdCallback,"config",1,grStTopic);
 }
 
+void Hamqtt::registerButtonEntity(const char * ent_name, const char * class_,CmdCallbackType cmdCallback,const char * icon){
+  registerEntity("button",ent_name,PERTYPE_NO_PERIOD,class_,nullptr, nullptr,icon,cmdCallback,"config",1,false);
+
+}
 
 
 void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt::PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id,const char * icon,\
@@ -143,7 +147,8 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
 
   m_enitiyDB[m_nrOFRegEnt]->object_id=String(m_deviceName) + String(m_devIndex) + String("-") +String(ent_name);
   if((strcmp(component,"number")==0)||\
-    (strcmp(component,"switch")==0)){
+    (strcmp(component,"switch")==0)||\
+    (strcmp(component,"button")==0)){
     m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull=String(DISCOVERY_PREFIX) + String("/") +  String(m_enitiyDB[m_nrOFRegEnt]->component) + String("/") +String(m_deviceName) + String(m_devIndex)+ (String)"/" + String(m_enitiyDB[m_nrOFRegEnt]->ent_name) + String("/set");
   }
     
@@ -215,8 +220,10 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
   else  
     json["unique_id"]= m_enitiyDB[index_of_entity]->object_id+getIndexStr(index_of_entity,index_of_item); 
   
-  
-  json["expire_after"]=getPeriod(index_of_entity) * m_expire_after/1000;
+  unsigned long period = getPeriod(index_of_entity);
+  if(period > 0){
+    json["expire_after"]=period * m_expire_after/1000;
+  }
   if(m_enitiyDB[index_of_entity]->icon != nullptr)
     json["icon"]=m_enitiyDB[index_of_entity]->icon;
 

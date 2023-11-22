@@ -27,7 +27,7 @@ class Hamqtt{
         PERTYPE_NORMAL,
         PERTYPE_LOWSPEED,
         PERTYPE_HIGHSPEED,
-        PERTYPE_NO_PERIOD   //for only event transmission
+        PERTYPE_NO_PERIOD   //for only event transmission or no transmittion to HA
     }; 
     typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
     /**
@@ -42,7 +42,6 @@ class Hamqtt{
      * @param highPer - period of publish data for high speed entity(PERTYPE_HIGHSPEED)
     */
     static void init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer=5000,unsigned int lowPer=30000ul,unsigned int highPer=1000);
-    
     /**
      * @brief Hamqtt - constructor
      * @param devName - device name
@@ -60,6 +59,14 @@ class Hamqtt{
     Hamqtt(const char * devName,const char *  devIndex=nullptr, PeriodType grPerType=PERTYPE_LOWSPEED, const char * model=nullptr,\
         const char * manufacturer=nullptr, const char * swVersion=nullptr, const char * identifiers=nullptr, const char * configuration_url=nullptr,\
         const char * hw_version=nullptr, const char * via_device=nullptr, int expire_after=3);
+
+    /**
+     *  @brief setDynamic - set object parameters, which has not valid value during allocation of object 
+     */
+    void setDynamic(const char * configuration_url){
+        m_configuration_url=configuration_url;
+    }
+
     /**
      * @brief registerEntity - universal register of entity
      * @param component - HA component name of, see https://www.home-assistant.io/integrations/#search/MQTT
@@ -97,6 +104,12 @@ class Hamqtt{
     void registerSwitchEntity(const char * ent_name,PeriodType perType, const char * class_,const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false);
 
     /**
+     * @brief registerButtonEntity - optimised registering function for Burron component type, see https://www.home-assistant.io/integrations/button.mqtt/
+    */
+    void registerButtonEntity(const char * ent_name, const char * class_,CmdCallbackType cmdCallback,const char * icon=nullptr);
+
+
+    /**
      * @brief write and publish value - only for simple and ungrouped entity
      * @param onlyCahnge - if true, value is published only if it is different from previous value 
      */
@@ -113,9 +126,7 @@ class Hamqtt{
     void writeValue(const char * ent_name, float value,int item=0);
     void writeSwitch(const char * ent_name, bool value,int item=0);
     void writeValue(const char * ent_name, uint32_t value,int item=0);
-    /**
-     * @brief main - main function, must be called in loop()
-    */
+
    /**
     * @brief startPublishing - start publishing data to MQTT broker, i would be called after all entities are set to valid values.
    */
