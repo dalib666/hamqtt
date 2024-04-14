@@ -96,7 +96,7 @@ void Hamqtt::registerSensorEntity(const char * ent_name,PeriodType perType, cons
   registerEntity("sensor",ent_name,perType,class_,unit_of_measurement,nullptr,icon,nullptr,"diagnostic",entNumber,grStTopic);
 }
 void Hamqtt::registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,CmdCallbackType cmdCallback,bool grStTopic,float max, float min){
-  registerEntity("number",ent_name,perType,class_,unit_of_measurement,nullptr,icon,cmdCallback,"config",1,grStTopic);
+  registerEntity("number",ent_name,perType,class_,unit_of_measurement,nullptr,icon,cmdCallback,"config",1,grStTopic,max,min);
 }
 
 void Hamqtt::registerSwitchEntity(const char * ent_name,PeriodType perType, const char * class_,const char * icon,CmdCallbackType cmdCallback,bool grStTopic){
