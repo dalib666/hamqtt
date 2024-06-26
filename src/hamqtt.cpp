@@ -108,6 +108,10 @@ void Hamqtt::registerButtonEntity(const char * ent_name, const char * class_,Cmd
 
 }
 
+void Hamqtt::registerBinSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * icon,int entNumber,bool grStTopic){
+  registerEntity("binary_sensor",ent_name,perType,class_,nullptr,nullptr,icon,nullptr,"diagnostic",entNumber,grStTopic);
+}
+
 
 void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt::PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id,const char * icon,\
 CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grStTopic,float max, float min){
@@ -209,10 +213,9 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
     json["command_topic"]=m_enitiyDB[index_of_entity]->cmdTopicFull; 
   }
   json["object_id"]=m_enitiyDB[index_of_entity]->object_id+getIndexStr(index_of_entity,index_of_item); 
-  if(m_enitiyDB[index_of_entity]->unit_of_measurement==nullptr)
-    json["unit_of_measurement"]="";
-  else
+  if(m_enitiyDB[index_of_entity]->unit_of_measurement!=nullptr) // in some entities unit does not exist at all
     json["unit_of_measurement"]=m_enitiyDB[index_of_entity]->unit_of_measurement;
+
   json["value_template"]=String("{{value_json.") + String(m_enitiyDB[index_of_entity]->ent_name)+getIndexStr(index_of_entity,index_of_item) + String("}}");
   
   if(m_enitiyDB[index_of_entity]->unique_id != nullptr)
@@ -550,6 +553,7 @@ void Hamqtt::writeValue(const char * ent_name, float value,int item){
   }
   assert(false);
 }
+
 
 
 void Hamqtt::writeSwitch(const char * ent_name, bool value,int item){

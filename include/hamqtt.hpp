@@ -108,6 +108,10 @@ class Hamqtt{
     */
     void registerButtonEntity(const char * ent_name, const char * class_,CmdCallbackType cmdCallback,const char * icon=nullptr);
 
+    /**
+     * @brief registerBinSensorEntity - optimised registering function for binary sensor component type, see https://www.home-assistant.io/integrations/binary_sensor.mqtt/
+    */
+    void registerBinSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * icon=nullptr, int entNumber=1,bool grStTopic=false);
 
     /**
      * @brief write and publish value - only for simple and ungrouped entity
@@ -118,6 +122,10 @@ class Hamqtt{
     void publishValue(const char * ent_name, uint32_t value,bool onlyChange=true);
     void publishValue(const char * ent_name, bool value,bool onlyChange=true);
     void publishSwitch(const char * ent_name, bool value,bool onlyChange=true);
+    inline void publishBinSen(const char * ent_name, bool value,bool onlyChange=true){
+        publishSwitch(ent_name,value,onlyChange=true);
+    }
+
 
     /**
      * @brief write value - primary for grouped entity in one state topic, useable also for other entities
