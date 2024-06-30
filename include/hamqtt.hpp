@@ -10,6 +10,9 @@
 /*                variables of MQTT componennt integration in HA, that API parameters are signed        */
 /*                by (HACV). Description of that parameters can be found in HA                          */
 /*                documentation e.g. "https://www.home-assistant.io/integrations/sensor.mqtt/"          */
+/*                                                                                                      */
+/* Attention !!! IF it is not noted explictly in some parameter, mainly registering/init functions      */
+/* of API  generally assumes that input string parameters are globaly constant, to save global memory !!! */
 /* ==================================================================================================== */
 
 #ifndef HAMQTT_HPP
@@ -68,9 +71,10 @@ class Hamqtt{
     }
 
     /**
-     * @brief registerEntity - universal register of entity
+     * @brief registerEntity -0 universal register of entity
      * @param component - HA component name of, see https://www.home-assistant.io/integrations/#search/MQTT
-     * @param ent_name - entity name, must be unique in device, if entity is multiple, index of item is added to name
+     * @param ent_name - entity name, must be unique in device, if entity is multiple, index of item is added to name. 
+     * Note ! ent_name parametr passed  can be localy allocated. Function this parameter copy in to local buffer. Note! 
      * @param perType - period type of published state data
      * @param class_ - (HACV)device class
      * @param unit_of_measurement - (HACV)unit of measurement

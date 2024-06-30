@@ -121,11 +121,7 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
   assert(m_enitiyDB[m_nrOFRegEnt]!=nullptr);
   m_enitiyDB[m_nrOFRegEnt]->grStateTopic =grStTopic;
   m_enitiyDB[m_nrOFRegEnt]->entNumber=entNumber;
-  /* Ent. name is copied into internal buffer to be possible use in application local parameeter for ent. name*/
-  char * alocEntName = new char[strlen(ent_name)+1];
-  assert(alocEntName!=nullptr);
-  strcpy(alocEntName,ent_name);
-  m_enitiyDB[m_nrOFRegEnt]->ent_name=alocEntName;
+  m_enitiyDB[m_nrOFRegEnt]->ent_name=ent_name;
   m_enitiyDB[m_nrOFRegEnt]->perType= perType;
   m_enitiyDB[m_nrOFRegEnt]->class_=class_;
   m_enitiyDB[m_nrOFRegEnt]->unit_of_measurement=unit_of_measurement;
@@ -562,8 +558,7 @@ void Hamqtt::writeValue(const char * ent_name, float value,int item){
 
 void Hamqtt::writeSwitch(const char * ent_name, bool value,int item){
   for(int i=0;i<m_nrOFRegEnt;i++){
-
-    if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
+    if(m_enitiyDB[i]->ent_name==ent_name){
       m_enitiyDB[i]->vType=VTYPE_STRING;
       assert(m_enitiyDB[i]->entNumber>item);
       m_enitiyDB[i]->value[item].s=value? "ON":"OFF";;
