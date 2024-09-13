@@ -62,6 +62,12 @@ void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqt
   connect();
 }
 
+boolean Hamqtt::is_connected(){
+
+  return MQTTClient.connected();
+}    
+
+
 void Hamqtt::startPublishing(){
   m_pubEnabled=true;
 }

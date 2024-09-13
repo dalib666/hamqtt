@@ -157,6 +157,11 @@ class Hamqtt{
         return Hamqtt::m_connected_time;
     }    
 
+    /**
+     * @brief Returns status of connection into MQTT broker
+     */
+    static boolean is_connected();
+
     const char *getEntName(int indexOfEnt);
     static void main();
 
