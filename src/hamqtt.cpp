@@ -32,11 +32,23 @@ PubSubClient Hamqtt::MQTTClient;
   unsigned long Hamqtt::m_lastConnectAttemp;
   unsigned long Hamqtt::m_connected_time;
 //static EntityConfData * Hamqtt::m_enitiyDB[MAX_REG_ENT]; 
-Hamqtt::Hamqtt(const char * devName,const char *  devIndex, PeriodType grPerType, const char * model, const char * manufacturer, const char * swVersion, const char * identifiers, const char * configuration_url, const char * hw_version, const char * via_device, int expire_after):\
-m_devIndex(devIndex),m_expire_after(expire_after),m_deviceName(devName),m_model(model),m_manufacturer(manufacturer),m_swVersion(swVersion),m_identifiers(identifiers),m_configuration_url(configuration_url),m_hw_version(hw_version),m_via_device(via_device),m_grPerType(grPerType){
+void  Hamqtt::obInit(const char * devName,const char *  devIndex, PeriodType grPerType, const char * model, const char * manufacturer, const char * swVersion, const char * identifiers, const char * configuration_url, const char * hw_version, const char * via_device, int expire_after){
+  m_devIndex=devIndex;
+  m_expire_after=expire_after;
+  m_deviceName=devName;
+  m_model=model;
+  m_manufacturer=manufacturer;
+  m_swVersion=swVersion;
+  m_identifiers=identifiers;
+  m_configuration_url=configuration_url;
+  m_hw_version=hw_version;
+  m_via_device=via_device;
+  m_grPerType=grPerType;
+
   if(m_devIndex==nullptr)
     m_devIndex="";
   m_nrOFRegEnt=0;
+  assert(m_expire_after > 0);
   assert(m_regObjNumb<MAX_REG_OBJ);
   assert(m_deviceName!=nullptr);
   m_regObjects[m_regObjNumb]=this;
@@ -59,6 +71,8 @@ void Hamqtt::init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqt
   m_DatasendLowPer=lowPer;
   m_DatasendHighPer=highPer;
   m_connected_time=0;
+  
+
   connect();
 }
 
@@ -145,7 +159,8 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
   m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull.clear();
 
   assert(m_enitiyDB[m_nrOFRegEnt]->value != nullptr);
-  if(strcmp(m_enitiyDB[m_nrOFRegEnt]->component,"switch")==0){
+  if((strcmp(m_enitiyDB[m_nrOFRegEnt]->component,"switch")==0)||\
+    (strcmp(m_enitiyDB[m_nrOFRegEnt]->component,"binary_sensor")==0)){
     for(int ind=0;ind<entNumber;ind++)
       m_enitiyDB[m_nrOFRegEnt]->value[ind].s="";
   }

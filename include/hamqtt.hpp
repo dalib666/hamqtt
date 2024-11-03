@@ -34,7 +34,8 @@ class Hamqtt{
     }; 
     typedef void (*CmdCallbackType) (int indOfEnt, String &payload);
     /**
-     * @brief init - init module, must be called before any other function
+     * @brief init - init module, 
+     * !!!Must be called after all obects initialisation !!!
      * @param wifiClient - pointer to WiFiClient object
      * @param brokerIP - IP address of MQTT broker
      * @param mqttUserName - MQTT user name
@@ -46,7 +47,8 @@ class Hamqtt{
     */
     static void init(WiFiClient * wifiClient, IPAddress & brokerIP,const char * mqttUserName,const char * mqttPass,const char * clientID,unsigned int normalPer=5000,unsigned int lowPer=30000ul,unsigned int highPer=1000);
     /**
-     * @brief Hamqtt - constructor
+     * @brief Hamqtt  object initialization
+     * Must be called before init function !!!
      * @param devName - device name
      * @param devIndex - device index, use to distinguish multiple devices of the same type in the same network
      * @param grPerType - period type for grouping entities into one topic
@@ -59,16 +61,9 @@ class Hamqtt{
      * @param via_device - (HACV)device via device
      * @param expire_after - multiplier of parameter "perType" in registerxxxx functions to calculate (HACV)expire_after parameter
     */
-    Hamqtt(const char * devName,const char *  devIndex=nullptr, PeriodType grPerType=PERTYPE_LOWSPEED, const char * model=nullptr,\
+    void  obInit(const char * devName,const char *  devIndex=nullptr, PeriodType grPerType=PERTYPE_LOWSPEED, const char * model=nullptr,\
         const char * manufacturer=nullptr, const char * swVersion=nullptr, const char * identifiers=nullptr, const char * configuration_url=nullptr,\
         const char * hw_version=nullptr, const char * via_device=nullptr, int expire_after=3);
-
-    /**
-     *  @brief setDynamic - set object parameters, which has not valid value during allocation of object 
-     */
-    void setDynamic(const char * configuration_url){
-        m_configuration_url=configuration_url;
-    }
 
     /**
      * @brief registerEntity -0 universal register of entity
