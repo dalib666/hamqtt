@@ -132,9 +132,15 @@ void Hamqtt::registerBinSensorEntity(const char * ent_name,PeriodType perType, c
   registerEntity("binary_sensor",ent_name,perType,class_,nullptr,nullptr,icon,nullptr,"diagnostic",entNumber,grStTopic);
 }
 
+void Hamqtt::registerTextEntity(const char * ent_name,PeriodType perType,const char * unique_id,const char * icon,\
+  CmdCallbackType cmdCallback,const char * entity_category,int entNumber,bool grStTopic,int max){
+  registerEntity("text",ent_name,perType,nullptr,nullptr,unique_id,icon,cmdCallback,"diagnostic",entNumber,grStTopic, max, 0);
+}
 
-void Hamqtt::registerEntity(const char * component, const char * ent_name,Hamqtt::PeriodType perType, const char * class_,const char * unit_of_measurement,const char * unique_id,const char * icon,\
-CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grStTopic,float max, float min){
+void Hamqtt::registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,\
+        const char * unit_of_measurement,const char * unique_id,const char * icon,\
+        CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grStTopic,\
+        float max, float min){
   assert(m_nrOFRegEnt<MAX_REG_ENT);
  
   m_enitiyDB[m_nrOFRegEnt]=new EntityConfData[1];
@@ -161,8 +167,19 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
   assert(m_enitiyDB[m_nrOFRegEnt]->value != nullptr);
   if((strcmp(m_enitiyDB[m_nrOFRegEnt]->component,"switch")==0)||\
     (strcmp(m_enitiyDB[m_nrOFRegEnt]->component,"binary_sensor")==0)){
-    for(int ind=0;ind<entNumber;ind++)
-      m_enitiyDB[m_nrOFRegEnt]->value[ind].s="";
+    m_enitiyDB[m_nrOFRegEnt]->max=3;
+    for(int ind=0;ind<entNumber;ind++){
+      m_enitiyDB[m_nrOFRegEnt]->value[ind].s=new char[int(m_enitiyDB[m_nrOFRegEnt]->max+1)];
+      strcpy(m_enitiyDB[m_nrOFRegEnt]->value[ind].s,"");
+    }
+  }
+
+  if(strcmp(m_enitiyDB[m_nrOFRegEnt]->component,"text")==0){
+    assert((m_enitiyDB[m_nrOFRegEnt]->max > 0) || (m_enitiyDB[m_nrOFRegEnt]->max <= 255));
+    for(int ind=0;ind<entNumber;ind++){
+      m_enitiyDB[m_nrOFRegEnt]->value[ind].s=new char[int(max+1)];
+      strcpy(m_enitiyDB[m_nrOFRegEnt]->value[ind].s,"");
+    }
   }
 
   if(grStTopic){
@@ -177,6 +194,7 @@ CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grS
   m_enitiyDB[m_nrOFRegEnt]->object_id=String(m_deviceName) + String(m_devIndex) + String("-") +String(ent_name);
   if((strcmp(component,"number")==0)||\
     (strcmp(component,"switch")==0)||\
+    (strcmp(component,"text")==0)||\
     (strcmp(component,"button")==0)){
     m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull=String(DISCOVERY_PREFIX) + String("/") +  String(m_enitiyDB[m_nrOFRegEnt]->component) + String("/") +String(m_deviceName) + String(m_devIndex)+ (String)"/" + String(m_enitiyDB[m_nrOFRegEnt]->ent_name) + String("/set");
   }
@@ -313,38 +331,40 @@ void Hamqtt::publishEntity(int index_of_entity, int index_of_item){
 }
 
 
+
 void Hamqtt::publishValue(const char  * ent_name, const char * value,bool onlyChange){
-  ValueType value_;
-  value_.s=value;
+  ValueType_arg value_;
+  value_.s= value;
   publishValue_int(ent_name,VTYPE_STRING, value_,onlyChange);
 }
 
 void Hamqtt::publishValue(const char  * ent_name, float value,bool onlyChange){
-  ValueType value_;
+  ValueType_arg value_;
   value_.f=value;  
    publishValue_int(ent_name,VTYPE_FLOAT, value_,onlyChange);
 }
 
 void Hamqtt::publishValue(const char * ent_name, uint32_t value,bool onlyChange){
-  ValueType value_;
+  ValueType_arg value_;
   value_.u32=value;  
    publishValue_int(ent_name,VTYPE_UINT32, value_,onlyChange);
 }
 void Hamqtt::publishValue(const char * ent_name, bool value,bool onlyChange){
-  ValueType value_;
+  ValueType_arg value_;
   value_.u32=value;  
    publishValue_int(ent_name,VTYPE_UINT32, value_,onlyChange);
 }
 
 void Hamqtt::publishSwitch(const char * ent_name, bool value,bool onlyChange){
-  ValueType value_;
+  ValueType_arg value_;
   value_.s= value? "ON":"OFF";
+
   publishValue_int(ent_name,VTYPE_STRING, value_,onlyChange);
 }
 
 
 
-void Hamqtt::publishValue_int(const char * ent_name, VType value_type, ValueType value,bool onlyChange){
+void Hamqtt::publishValue_int(const char * ent_name, VType value_type, ValueType_arg value,bool onlyChange){
   assert(value_type != VTYPE_UNDEF);
 
   for(int i=0;i<m_nrOFRegEnt;i++){
@@ -369,16 +389,17 @@ void Hamqtt::publishValue_int(const char * ent_name, VType value_type, ValueType
       if(!onlyChange || m_enitiyDB[i]->vType==VTYPE_UNDEF || changeValue){
         switch(value_type){
           case VTYPE_UINT32:
-              m_enitiyDB[i]->value[0]=value;
+              m_enitiyDB[i]->value[0].u32=value.u32;
               m_enitiyDB[i]->vType=VTYPE_UINT32;
             break;
           case VTYPE_FLOAT:
-              m_enitiyDB[i]->value[0]=value;
+              m_enitiyDB[i]->value[0].f=value.f;
               m_enitiyDB[i]->vType=VTYPE_FLOAT;
             break;
           case VTYPE_STRING:
-              m_enitiyDB[i]->value[0]=value;
               m_enitiyDB[i]->vType=VTYPE_STRING;
+              assert(strlen(value.s) <= (int)m_enitiyDB[i]->max);
+              strcpy(m_enitiyDB[i]->value[0].s,value.s);
             break;
 
           case  VTYPE_UNDEF:
@@ -557,10 +578,11 @@ unsigned long Hamqtt::getPeriod(int index_of_entity){
 void Hamqtt::writeValue(const char * ent_name, const char * value,int item){
   for(int i=0;i<m_nrOFRegEnt;i++){
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
-      assert(strcmp(m_enitiyDB[i]->component,"switch")!=0);
+      assert(strcmp(m_enitiyDB[i]->component,"text")==0);
       m_enitiyDB[i]->vType=VTYPE_STRING;
       assert(m_enitiyDB[i]->entNumber>item);
-      m_enitiyDB[i]->value[item].s=value;
+      assert(strlen(value) <= (int)m_enitiyDB[i]->max);
+      strcpy(m_enitiyDB[i]->value[item].s,value);
       return;
     }
   }
@@ -586,8 +608,10 @@ void Hamqtt::writeSwitch(const char * ent_name, bool value,int item){
 
     if(strcmp(m_enitiyDB[i]->ent_name,ent_name)==0){
       m_enitiyDB[i]->vType=VTYPE_STRING;
+      assert(strcmp(m_enitiyDB[i]->component,"switch")==0);
       assert(m_enitiyDB[i]->entNumber>item);
-      m_enitiyDB[i]->value[item].s=value? "ON":"OFF";;
+      const char * s_ptr=value? "ON":"OFF";
+      strcpy(m_enitiyDB[i]->value[item].s,s_ptr);
       return;
     }
   }

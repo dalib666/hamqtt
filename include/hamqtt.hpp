@@ -111,6 +111,12 @@ class Hamqtt{
      * @brief registerBinSensorEntity - optimised registering function for binary sensor component type, see https://www.home-assistant.io/integrations/binary_sensor.mqtt/
     */
     void registerBinSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * icon=nullptr, int entNumber=1,bool grStTopic=false);
+    
+    /**
+     * @brief registerTextEntity - optimised registering function for text entity component type, see https://www.home-assistant.io/integrations/text.mqtt/
+    */
+    void registerTextEntity(const char * ent_name,PeriodType perType,const char * unique_id,const char * icon,\
+        CmdCallbackType cmdCallback,const char * entity_category,int entNumber,bool grStTopic,int max);
 
     /**
      * @brief write and publish value - only for simple and ungrouped entity
@@ -203,9 +209,14 @@ class Hamqtt{
     union ValueType{
       uint32_t u32;
       float f;
-      const char * s;
+      char * s;
     };
    
+    union ValueType_arg{
+      uint32_t u32;
+      float f;
+      const char * s;
+    };
     enum VType{
         VTYPE_UNDEF,
         VTYPE_UINT32,
@@ -244,7 +255,7 @@ class Hamqtt{
     void publishGroupedEntities();
     static void messageReceived(char *topic, byte*payload,unsigned int length);
     unsigned long getPeriod(int index_of_entity);
-    void publishValue_int(const char * ent_name, VType value_type, ValueType value,bool onlyChange=true);
+    void publishValue_int(const char * ent_name, VType value_type, ValueType_arg value,bool onlyChange=true);
     static PubSubClient MQTTClient;  
     bool m_pubEnabled;
     static unsigned long m_lastConnectAttemp;
