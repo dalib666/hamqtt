@@ -80,12 +80,13 @@ class Hamqtt{
      * @param entNumber - number of entity items, if entity is multiple
      * @param grStTopic - all entities with set grStTopic=true are grouped into one state topic
      * @param max - up limit of range
-    *  @param min - low limit of range
+     * @param min - low limit of range
+     * @param mode - display mode, e.g. "auto", "box", or "slider"
     */
     void registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,\
         const char * unit_of_measurement=nullptr,const char * unique_id=nullptr,const char * icon=nullptr,\
         CmdCallbackType cmdCallback=nullptr,const char * entity_category=nullptr, int entNumber=1,bool grStTopic=false,\
-        float max=0, float min=0);
+        float max=0, float min=0, const char * mode=nullptr);
     /**
      * @brief registerSensorEntity - optimised registering function for sensor component type, see https://www.home-assistant.io/integrations/sensor.mqtt/
     */
@@ -95,7 +96,8 @@ class Hamqtt{
      * @brief registerNumberEntity - optimised registering function for number component type, see https://www.home-assistant.io/integrations/number.mqtt/
     */
     void registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement=nullptr,\
-        const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false,float max=0, float min=0);
+        const char * icon=nullptr,CmdCallbackType cmdCallback=nullptr,bool grStTopic=false,float max=0, float min=0,\
+        const char * mode=nullptr);
 
     /**
      * @brief registerSwitchEntity - optimised registering function for Switch component type, see https://www.home-assistant.io/integrations/switch.mqtt/
@@ -244,6 +246,7 @@ class Hamqtt{
         bool grStateTopic;
         float max;
         float min;
+        const char * mode;
     };
     static void process_callback();
     static void main_int(PeriodType perType);

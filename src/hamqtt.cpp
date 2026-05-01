@@ -115,8 +115,8 @@ void Hamqtt::connect(bool recon) {
 void Hamqtt::registerSensorEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,int entNumber,bool grStTopic){
   registerEntity("sensor",ent_name,perType,class_,unit_of_measurement,nullptr,icon,nullptr,"diagnostic",entNumber,grStTopic);
 }
-void Hamqtt::registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,CmdCallbackType cmdCallback,bool grStTopic,float max, float min){
-  registerEntity("number",ent_name,perType,class_,unit_of_measurement,nullptr,icon,cmdCallback,"config",1,grStTopic,max,min);
+void Hamqtt::registerNumberEntity(const char * ent_name,PeriodType perType, const char * class_,const char * unit_of_measurement,const char * icon,CmdCallbackType cmdCallback,bool grStTopic,float max, float min,const char * mode){
+  registerEntity("number",ent_name,perType,class_,unit_of_measurement,nullptr,icon,cmdCallback,"config",1,grStTopic,max,min,mode);
 }
 
 void Hamqtt::registerSwitchEntity(const char * ent_name,PeriodType perType, const char * class_,const char * icon,CmdCallbackType cmdCallback,bool grStTopic){
@@ -140,7 +140,7 @@ void Hamqtt::registerTextEntity(const char * ent_name,PeriodType perType,const c
 void Hamqtt::registerEntity(const char * component, const char * ent_name,PeriodType perType, const char * class_,\
         const char * unit_of_measurement,const char * unique_id,const char * icon,\
         CmdCallbackType cmdCallback,const char * entity_category, int entNumber,bool grStTopic,\
-        float max, float min){
+        float max, float min,const char * mode){
   assert(m_nrOFRegEnt<MAX_REG_ENT);
  
   m_enitiyDB[m_nrOFRegEnt]=new EntityConfData[1];
@@ -162,6 +162,7 @@ void Hamqtt::registerEntity(const char * component, const char * ent_name,Period
   m_enitiyDB[m_nrOFRegEnt]->value=new ValueType[entNumber];
   m_enitiyDB[m_nrOFRegEnt]->max=max;
   m_enitiyDB[m_nrOFRegEnt]->min=min;
+  m_enitiyDB[m_nrOFRegEnt]->mode=mode;
   m_enitiyDB[m_nrOFRegEnt]->cmdTopicFull.clear();
 
   assert(m_enitiyDB[m_nrOFRegEnt]->value != nullptr);
@@ -277,6 +278,9 @@ void Hamqtt::publishConfOfEntity(int index_of_entity, int index_of_item){
     json["max"]=m_enitiyDB[index_of_entity]->max;
     json["min"]=m_enitiyDB[index_of_entity]->min;
   }
+
+  if(m_enitiyDB[index_of_entity]->mode != nullptr)
+    json["mode"]=m_enitiyDB[index_of_entity]->mode;
   
   if(m_enitiyDB[index_of_entity]->entity_category != nullptr)
     json["entity_category"]=m_enitiyDB[index_of_entity]->entity_category;
